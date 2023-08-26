@@ -1,6 +1,7 @@
 from datetime import datetime
-from decodex.utils import trunc_addr
 from typing import Dict
+
+from .utils import trunc_addr
 
 
 def fmt_blktime(blktime: datetime) -> str:

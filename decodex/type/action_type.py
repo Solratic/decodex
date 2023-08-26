@@ -5,7 +5,7 @@ from typing import Callable
 from typing import Dict
 from typing import Optional
 
-from decodex.type import TaggedAddr
+from .tx_type import TaggedAddr
 from decodex.utils import fmt_addr
 
 
