@@ -1,8 +1,12 @@
-from dataclasses import dataclass
 from abc import abstractmethod
-from typing import Callable, Dict, Any, Optional
-from decodex.utils import fmt_addr
+from dataclasses import dataclass
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Optional
+
 from decodex.type import TaggedAddr
+from decodex.utils import fmt_addr
 
 
 class Action:
@@ -12,6 +16,20 @@ class Action:
 
 
 EventHandleFunc = Callable[[Dict[str, Any]], Optional[Action]]
+
+
+@dataclass(frozen=True)
+class UTF8Message(Action):
+    """
+    Represents a UTF8 message send from one address to another.
+    """
+
+    sender: TaggedAddr
+    receiver: TaggedAddr
+    message: str
+
+    def __repr__(self):
+        return f"{fmt_addr(self.sender)} sent message to {fmt_addr(self.receiver)}: {self.message}"
 
 
 @dataclass(frozen=True)
@@ -73,9 +91,7 @@ class RemoveLiquidityAction(Action):
     amount_1: float
 
     def __repr__(self) -> str:
-        tmpl = (
-            "Remove {amount_0} {token_0} and {amount_1} {token_1} liquidity from {pool}"
-        )
+        tmpl = "Remove {amount_0} {token_0} and {amount_1} {token_1} liquidity from {pool}"
         return tmpl.format(
             token_0=fmt_addr(self.token_0),
             token_1=fmt_addr(self.token_1),

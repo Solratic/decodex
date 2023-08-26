@@ -31,6 +31,7 @@ from decodex.type import EventHandleFunc
 from decodex.type import TaggedTx
 from decodex.utils import parse_ether
 from decodex.utils import parse_gwei
+from decodex.utils import parse_utf8
 
 
 class Translator:
@@ -73,14 +74,10 @@ class Translator:
         logger : Logger, optional
             Logger to log error messages, default is None
         """
-        self.tagger = (
-            TaggerFactory.create(tagger) if isinstance(tagger, str) else tagger
-        )
+        self.tagger = TaggerFactory.create(tagger) if isinstance(tagger, str) else tagger
 
         self.sig_lookup = (
-            SignatureFactory.create(fmt=sig_lookup, chain=chain)
-            if isinstance(sig_lookup, str)
-            else sig_lookup
+            SignatureFactory.create(fmt=sig_lookup, chain=chain) if isinstance(sig_lookup, str) else sig_lookup
         )
 
         self.searcher = SearcherFactory.create("web3", uri=provider_uri)
@@ -131,13 +128,19 @@ class Translator:
         tx = self.searcher.search_tx(txhash)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             actions = executor.map(self.decode_log, tx["logs"])
-        actions = list(actions)
+        actions = [x for x in actions if x is not None]
         blk_time = datetime.fromtimestamp(tx["block_timestamp"], tz=pytz.utc)
-        (tx_from,) = self.tagger(tx["from"])
-        (tx_to,) = self.tagger(tx["to"])
+        (tx_from, tx_to) = self.tagger([tx["from"], tx["to"]])
+        if len(actions) == 0 and len(tx["input"]) > 0:
+            print("no actions found, try to parse input as utf8 message")
+            msg = parse_utf8(tx["input"])
+            if msg is not None:
+                actions = [Action(tx_from, tx_to, msg)]
+            else:
+                print("no utf8 message found")
         return {
             "txhash": tx["txhash"],
-            "actions": [x for x in actions if x is not None],
+            "actions": actions,
             "from": tx_from,
             "to": tx_to,
             "block_time": blk_time,
