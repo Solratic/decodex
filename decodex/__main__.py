@@ -1,18 +1,20 @@
+import os
+from textwrap import indent
+
 import click
 import pyfiglet
-from colorama import Fore, Style
-from decodex.translate import Translator
+from colorama import Fore
+from colorama import Style
+
 from .constant import DECODEX_DIR
-from .installer import download_and_save_csv, download_and_save_json
-import os
-from decodex.utils import (
-    fmt_addr,
-    fmt_blktime,
-    fmt_gas,
-    fmt_status,
-    fmt_value,
-)
-from textwrap import indent
+from .installer import download_and_save_csv
+from .installer import download_and_save_json
+from decodex.translate import Translator
+from decodex.utils import fmt_addr
+from decodex.utils import fmt_blktime
+from decodex.utils import fmt_gas
+from decodex.utils import fmt_status
+from decodex.utils import fmt_value
 
 CONTEXT_SETTINGS = dict(
     help_option_names=["-h", "--help"],
@@ -84,8 +86,7 @@ Value: {value}
 GasUsed: {gas_used}
 Gas Price: {gas_price}
 Status: {status}
-
-{actions}
+{action_field}{actions}
 """
     txhash = tagged_tx["txhash"]
     blocktime = fmt_blktime(tagged_tx["block_time"])
@@ -96,9 +97,9 @@ Status: {status}
     gas_price = fmt_gas(tagged_tx["gas_price"])
     status = fmt_status(tagged_tx["status"])
 
+    action_existed = len(tagged_tx["actions"]) != 0
     action_str = ""
-    if len(tagged_tx["actions"]) != 0:
-        action_str = "Actions:\n"
+    if action_existed:
         action_str += "\n".join(f"- {a}" for a in tagged_tx["actions"])
     indented_actions = indent(action_str, "    ")  # Indent actions by 4 spaces
 
@@ -111,6 +112,7 @@ Status: {status}
         gas_used=gas_used,
         gas_price=gas_price,
         status=status,
+        action_field="Actions:\n" if action_existed else "",
         actions=indented_actions,
     )
 

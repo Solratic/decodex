@@ -12,11 +12,17 @@ def parse_ether(wei: int) -> float:
 
 
 def parse_utf8(hex: str) -> Optional[str]:
+    """
+    Parameters
+    ----------
+    hex : str
+        Hex string to be decoded. 0x prefixed.
+    """
     try:
-        byte_data = bytes.fromhex(hex)
+        byte_data = bytes.fromhex(hex[2:])
         utf8_str = byte_data.decode("utf-8")
         return utf8_str
-    except (ValueError, UnicodeDecodeError):
+    except Exception as e:
         return None
 
 

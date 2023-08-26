@@ -29,6 +29,7 @@ from decodex.translate.events import UniswapV3Events
 from decodex.type import Action
 from decodex.type import EventHandleFunc
 from decodex.type import TaggedTx
+from decodex.type import UTF8Message
 from decodex.utils import parse_ether
 from decodex.utils import parse_gwei
 from decodex.utils import parse_utf8
@@ -132,12 +133,9 @@ class Translator:
         blk_time = datetime.fromtimestamp(tx["block_timestamp"], tz=pytz.utc)
         (tx_from, tx_to) = self.tagger([tx["from"], tx["to"]])
         if len(actions) == 0 and len(tx["input"]) > 0:
-            print("no actions found, try to parse input as utf8 message")
             msg = parse_utf8(tx["input"])
             if msg is not None:
-                actions = [Action(tx_from, tx_to, msg)]
-            else:
-                print("no utf8 message found")
+                actions = [UTF8Message(tx_from, tx_to, msg)]
         return {
             "txhash": tx["txhash"],
             "actions": actions,

@@ -23,6 +23,22 @@ decodex download ethereum
 decodex explain 0x2c744e19638b8dd14dafd03552a390f750e65dc7b0646585cf0ea40ef7a98743
 ```
 
+The output should be like this :
+
+```bash
+  Transaction: 0x2c744e19638b8dd14dafd03552a390f750e65dc7b0646585cf0ea40ef7a98743
+  Blocktime: 2023-08-26 10:29:47 UTC
+  From: 0x7F65...5446
+  To: 0xE592...1564
+  Value: 0.8088 Ether
+  GasUsed: 0.00019449
+  Gas Price: 14.034892345 Gwei
+  Status: Success
+  Actions:
+      - Swap 0.8088 Wrapped Ether [wrapped-token] for 1333.428458 Tether USD (USDT) [bitfinex, stablecoin] on 0x11b8...97F6
+      - Swap 1333.428458 Tether USD (USDT) [bitfinex, stablecoin] for 0.8079914030453189 Wrapped Ether [wrapped-token] on 0x11b8...97F6
+```
+
 ## Python Usage
 
 Document coming soon
