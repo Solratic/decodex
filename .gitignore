@@ -1,6 +1,7 @@
 # General
 __pycache__/
 *.py[cod]
+*$py.class
 *.so
 *.egg
 *.egg-info/
@@ -9,6 +10,12 @@ build/
 .vscode/
 .idea/
 *.code-workspace
+
+# Pytest cache
+.pytest_cache/
+
+# Caches
+.cache/
 
 # Poetry
 poetry.lock
