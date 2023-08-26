@@ -9,6 +9,10 @@ repos:
     rev: 23.7.0
     hooks:
     -   id: black
+-   repo: https://github.com/asottile/reorder-python-imports
+    rev: v3.10.0
+    hooks:
+    -   id: reorder-python-imports
 -   repo: https://github.com/python-poetry/poetry
     rev: '1.6.1'
     hooks:

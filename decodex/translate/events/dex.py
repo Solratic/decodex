@@ -1,19 +1,22 @@
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
+from multicall import Call
 from multicall import Multicall
+
 from decodex.convert.address import AddrTagger
 from decodex.convert.signature import SignatureLookUp
-from decodex.type import (
-    EventPayload,
-    EventHandleFunc,
-    Action,
-    SwapAction,
-    PoolCreatedAction,
-    AddLiquidityAction,
-    RemoveLiquidityAction,
-    CollectAction,
-    OwnerChangedAction,
-)
-from typing import Tuple, Optional, Union, List
-from multicall import Call
+from decodex.type import Action
+from decodex.type import AddLiquidityAction
+from decodex.type import CollectAction
+from decodex.type import EventHandleFunc
+from decodex.type import EventPayload
+from decodex.type import OwnerChangedAction
+from decodex.type import PoolCreatedAction
+from decodex.type import RemoveLiquidityAction
+from decodex.type import SwapAction
 
 
 class Events:
@@ -81,21 +84,34 @@ class UniswapV2Events(UniswapEvents):
             amount1_diff = int(params["amount1Out"]) - int(params["amount1In"])
             if amount0_diff > 0:
                 # pay token0, get token1
+                pool, token0, token1 = self.tagger(
+                    [payload["address"], token0_addr, token1_addr]
+                )
                 return SwapAction(
-                    pool=self.tagger(payload["address"]),
-                    pay_token=self.tagger(token0_addr),
+                    pool=pool,
+                    pay_token=token0,
                     pay_amount=abs(amount0_diff / 10**token0_decimals),
-                    recv_token=self.tagger(token1_addr),
+                    recv_token=token1,
                     recv_amount=abs(amount1_diff / 10**token1_decimals),
                 )
             elif amount1_diff > 0:
-                return SwapAction()
+                # pay token1, get token0
+                pool, token0, token1 = self.tagger(
+                    [payload["address"], token0_addr, token1_addr]
+                )
+                return SwapAction(
+                    pool=pool,
+                    pay_token=token1,
+                    pay_amount=abs(amount1_diff / 10**token1_decimals),
+                    recv_token=token0,
+                    recv_amount=abs(amount0_diff / 10**token0_decimals),
+                )
             else:
                 return None
 
         return text_sig, decoder
 
-    def add_liquidity(self) -> Tuple[str, EventHandleFunc]:
+    def mint(self) -> Tuple[str, EventHandleFunc]:
         # Mint(address indexed sender, uint amount0, uint amount1);
         text_sig = "Mint(address,uint256,uint256)"
 
@@ -105,17 +121,20 @@ class UniswapV2Events(UniswapEvents):
                 [token0_addr, token1_addr]
             )
             params = payload["params"]
+            pool, token0, token1 = self.tagger(
+                [payload["address"], token0_addr, token1_addr]
+            )
             return AddLiquidityAction(
-                pool=self.tagger(payload["address"]),
-                token_0=self.tagger(token0_addr),
-                token_1=self.tagger(token1_addr),
+                pool=pool,
+                token_0=token0,
+                token_1=token1,
                 amount_0=int(params["amount0"]) / 10**token0_decimals,
                 amount_1=int(params["amount1"]) / 10**token1_decimals,
             )
 
         return text_sig, decoder
 
-    def remove_liquidity(self) -> Tuple[str, EventHandleFunc]:
+    def burn(self) -> Tuple[str, EventHandleFunc]:
         # Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
         text_sig = "Burn(address,uint256,uint256,address)"
 
@@ -125,10 +144,13 @@ class UniswapV2Events(UniswapEvents):
                 [token0_addr, token1_addr]
             )
             params = payload["params"]
+            pool, token0, token1 = self.tagger(
+                [payload["address"], token0_addr, token1_addr]
+            )
             return RemoveLiquidityAction(
-                pool=self.tagger(payload["address"]),
-                token_0=self.tagger(token0_addr),
-                token_1=self.tagger(token1_addr),
+                pool=pool,
+                token_0=token0,
+                token_1=token1,
                 amount_0=int(params["amount0"]) / 10**token0_decimals,
                 amount_1=int(params["amount1"]) / 10**token1_decimals,
             )
@@ -141,11 +163,10 @@ class UniswapV2Events(UniswapEvents):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
-            token0_addr = self.tagger(params["token0"])
-            token1_addr = self.tagger(params["token1"])
+            token0, token1 = self.tagger([params["token0"], params["token1"]])
             return PoolCreatedAction(
-                token_0=token0_addr,
-                token_1=token1_addr,
+                token_0=token0,
+                token_1=token1,
             )
 
         return text_sig, decoder
@@ -184,11 +205,10 @@ class UniswapV3Events(UniswapEvents):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
-            token0_addr = self.tagger(params["token0"])
-            token1_addr = self.tagger(params["token1"])
+            token0, token1 = self.tagger([params["token0"], params["token1"]])
             return PoolCreatedAction(
-                token_0=token0_addr,
-                token_1=token1_addr,
+                token_0=token0,
+                token_1=token1,
                 fee=int(params["fee"]),
             )
 
@@ -300,10 +320,13 @@ class UniswapV3Events(UniswapEvents):
                 [token0_addr, token1_addr]
             )
             amount0, amount1 = int(params["amount0"]), int(params["amount1"])
+            pool, token0, token1 = self.tagger(
+                [payload["address"], token0_addr, token1_addr]
+            )
             return CollectAction(
-                pool=self.tagger(payload["address"]),
-                token_0=self.tagger(token0_addr),
-                token_1=self.tagger(token1_addr),
+                pool=pool,
+                token_0=token0,
+                token_1=token1,
                 amount_0=abs(amount0 / 10**token0_decimals),
                 amount_1=abs(amount1 / 10**token1_decimals),
             )
