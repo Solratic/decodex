@@ -1,0 +1,34 @@
+# General
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.vscode/
+.idea/
+*.code-workspace
+
+# Poetry
+poetry.lock
+
+# Environment
+venv/
+.env
+
+# Compiled files
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Editor-specific files
+*.swp
+*~
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak

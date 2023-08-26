@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "decodex"
+version = "0.1.0"
+description = "Python package to decode dex actions"
+authors = ["alan890104 <alan890104@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+web3 = "5.31.4"
+pandas = "^2.0.3"
+multicall = {git = "https://github.com/jsvisa/multicall.py.git"}
+pyfiglet = "^0.8.post1"
+click = "^8.1.7"
+colorama = "^0.4.6"
+requests = "^2.31.0"
+tqdm = "^4.66.1"
+
+[tool.poetry.scripts]
+decodex = "decodex.__main__:cli"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.3.3"
+black = "^23.7.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
