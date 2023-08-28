@@ -50,11 +50,9 @@ If you use Decodex in your research or project, please cite it using the followi
 ```bibtex
 @misc{decodex,
   title = {Decodex: The Python Decoder for DeFi Actions},
-  author = {alan890104},
-  year = {2023},
-  month = {Aug},
+  author = {{Yu Lun Hsu}},
   email = {alan890104@gmail.com},
-  note = {Available at: https://github.com/Solratic/decodex},
+  year = {2023},
   howpublished = {\url{https://github.com/Solratic/decodex}},
 }
 ```
