@@ -42,3 +42,19 @@ The output should be like this :
 ## Python Usage
 
 Document coming soon
+
+## Cite this tool
+
+If you use Decodex in your research or project, please cite it using the following BibTeX entry:
+
+```bibtex
+@misc{decodex,
+  title = {Decodex: The Python Decoder for DeFi Actions},
+  author = {alan890104},
+  year = {2023},
+  month = {Aug},
+  email = {alan890104@gmail.com},
+  note = {Available at: https://github.com/Solratic/decodex},
+  howpublished = {\url{https://github.com/Solratic/decodex}},
+}
+```
