@@ -1,6 +1,10 @@
-from typing import List, Dict, Tuple, Any
-from eth_abi.abi import decode
 import itertools
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Tuple
+
+from eth_abi.abi import decode_abi
 
 
 def eth_decode_log(event_abi: Dict, topics: List[str], data: str) -> Tuple[str, Dict]:
@@ -30,9 +34,7 @@ def eth_decode_log(event_abi: Dict, topics: List[str], data: str) -> Tuple[str, 
     # Separate indexed and non-indexed inputs
     indexed_inputs, non_indexed_inputs = _partition_inputs(event_abi.get("inputs", []))
 
-    func_signature = _create_function_signature(
-        event_abi["name"], indexed_inputs + non_indexed_inputs
-    )
+    func_signature = _create_function_signature(event_abi["name"], indexed_inputs + non_indexed_inputs)
 
     indexed_values = _decode_values_from_topics(indexed_inputs, topics)
     non_indexed_values = _decode_values_from_data(non_indexed_inputs, data)
@@ -111,7 +113,7 @@ def _decode_values_from_topics(indexed_inputs: List[Dict], topics: List[str]) ->
 
     """
     return {
-        input["name"]: decode([input["type"]], bytes.fromhex(topic[2:]))[0]
+        input["name"]: decode_abi([input["type"]], bytes.fromhex(topic[2:]))[0]
         for input, topic in zip(indexed_inputs, topics[1:])
     }
 
@@ -134,7 +136,7 @@ def _decode_values_from_data(non_indexed_inputs: List[Dict], data: str) -> Dict:
 
     """
     types = [input["type"] for input in non_indexed_inputs]
-    values = decode(types, bytes.fromhex(data[2:]))
+    values = decode_abi(types, bytes.fromhex(data[2:]))
     return dict(zip((input["name"] for input in non_indexed_inputs), values))
 
 
@@ -158,9 +160,7 @@ def _merge_parameters(indexed_values: Dict, non_indexed_values: Dict) -> Dict:
     merged = indexed_values.copy()
     merged.update(non_indexed_values)
     # Add __idx_ keys
-    for idx, key in enumerate(
-        itertools.chain(indexed_values.keys(), non_indexed_values.keys())
-    ):
+    for idx, key in enumerate(itertools.chain(indexed_values.keys(), non_indexed_values.keys())):
         merged[f"__idx_{idx}"] = merged[key]
     return merged
 
