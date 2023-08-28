@@ -1,4 +1,4 @@
-# Decodex
+# Decodex - Decoder for Dex
 
 The python decoder for DeFi actions, similar to transaction action on Etherscan.
 
