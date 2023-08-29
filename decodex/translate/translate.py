@@ -143,7 +143,7 @@ class Translator:
             "to": tx_to,
             "block_time": blk_time,
             "value": parse_ether(tx["value"]),
-            "gas_used": parse_gwei(tx["gas_used"]),
+            "gas_used": tx["gas_used"],
             "gas_price": parse_gwei(tx["gas_price"]),
             "input": tx["input"],
             "status": tx["status"],
