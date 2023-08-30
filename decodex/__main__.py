@@ -51,7 +51,7 @@ def download(chain: str):
             dir.joinpath("tags.json"),
         )
         download_and_save_csv(
-            "https://raw.githubusercontent.com/Solratic/function-signature-registry/main/data/ethereum/func_sign.csv.gz",
+            "https://github.com/Solratic/function-signature-registry/raw/main/data/ethereum/func_sign.csv.gz",
             dir.joinpath("signatures.csv"),
         )
     else:
