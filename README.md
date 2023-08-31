@@ -31,7 +31,7 @@ The output should be like this :
   From: 0x7F65...5446
   To: 0xE592...1564
   Value: 0.8088 Ether
-  GasUsed: 0.00019449
+  GasUsed: 194490
   Gas Price: 14.034892345 Gwei
   Status: Success
   Actions:

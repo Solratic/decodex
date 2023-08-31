@@ -51,8 +51,8 @@ def download(chain: str):
             dir.joinpath("tags.json"),
         )
         download_and_save_csv(
-            "https://github.com/Solratic/function-signature-registry/raw/main/data/ethereum/func_sign.csv.gz",
-            dir.joinpath("signatures.csv"),
+            chain="ethereum",
+            save_path=dir.joinpath("signatures.csv"),
         )
     else:
         raise ValueError(f"Chain {chain} is not yet supported.")

@@ -1,3 +1,4 @@
+import json
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -12,6 +13,7 @@ from typing import Union
 
 import pytz
 from multicall import Multicall
+from web3 import Web3
 
 from decodex.convert.address import AddrTagger
 from decodex.convert.address import TaggerFactory
@@ -101,7 +103,8 @@ class Translator:
                 if not callable(handle_func):
                     continue
                 text_sig, decoder = handle_func()
-                self.hdlrs[text_sig] = decoder
+                byte_sig = Web3.keccak(text=text_sig).hex()
+                self.hdlrs[byte_sig] = decoder
 
     @classmethod
     def supported_defis(cls) -> List[str]:
@@ -111,19 +114,21 @@ class Translator:
         topics = log.get("topics", [])
         if len(topics) == 0:
             raise ValueError("Log topics is empty")
-        abi, text_sign = self.sig_lookup(topics[0])
-        handler = self.hdlrs.get(text_sign, None)
+        handler = self.hdlrs.get(topics[0], None)
         if handler is None:
             return None
-        try:
-            _, params = eth_decode_log(abi, topics, log.get("data", "0x"))
-            result = handler({"address": log["address"], "params": params})
-            return result
-        except Exception as e:
-            if self.verbose:
-                traceback.print_exc()
-                self.logger.error(f"Error when decoding log {log} with error {e}")
-            return None
+        abi_textsign_list = self.sig_lookup(topics[0])
+        for abi, _ in abi_textsign_list:
+            abi = json.loads(abi)
+            try:
+                _, params = eth_decode_log(abi, topics, log.get("data", "0x"))
+                result = handler({"address": log["address"], "params": params})
+                return result
+            except Exception as e:
+                if self.verbose:
+                    traceback.print_exc()
+                    self.logger.error(f"Error when decoding log {log} with error {e}")
+        return None
 
     def translate(self, txhash: str, max_workers: int = 10) -> TaggedTx:
         tx = self.searcher.search_tx(txhash)

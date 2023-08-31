@@ -1,7 +1,12 @@
-from typing import Tuple, Dict, Literal, Callable
-import pandas as pd
-import os
 import json
+import os
+from typing import Callable
+from typing import Dict
+from typing import Literal
+from typing import Tuple
+
+import pandas as pd
+
 from decodex.constant import DECODEX_DIR
 
 
@@ -9,7 +14,7 @@ class SignatureLookUp:
     def __init__(self) -> None:
         pass
 
-    def __call__(self, byte_sign: str) -> Tuple[Dict, str]:
+    def __call__(self, byte_sign: str) -> Tuple[Tuple[str, str]]:
         """
         Search for the signature in the database and return the corresponding abi and text_signature.
 
@@ -20,8 +25,8 @@ class SignatureLookUp:
 
         Returns
         -------
-        Tuple[Dict, str]
-            The abi (Dict) and text_signature (str) corresponding to the signature.
+        Tuple[Tuple[str, str]]:
+            The list of (abi, signature) corresponding to the signature.
 
         """
         raise NotImplementedError
@@ -42,32 +47,22 @@ class CSVSignatureLookUp(SignatureLookUp):
             raise ValueError("Signature lookup file is empty")
 
         cols = set(self.df.columns)
-        expected_cols = {"byte_sign", "abi", "text_sign"}
+        expected_cols = {"byte_sign", "abi", "text_sign", "score"}
         if cols != expected_cols:
             raise ValueError(
-                f"Signature lookup file is not valid, expected columns: {', '.join(expected_cols)}"
+                f"Signature lookup file is not valid, expected columns: {', '.join(expected_cols)}, but got: {', '.join(cols)}"
             )
 
-    def __call__(self, byte_sign: str) -> Tuple[Dict, str]:
-        """
-        Search for the signature in the database and return the corresponding abi and text_signature.
-
-        Parameters
-        ----------
-        byte_sign : str
-            The signature in hex string, 0x prefixed.
-
-        Returns
-        -------
-        Tuple[Dict, str]
-            The abi (Dict) and text_signature (str) corresponding to the signature.
-
-        """
+    def __call__(self, byte_sign: str) -> Tuple[Tuple[str, str]]:
         rows = self.df[self.df["byte_sign"] == byte_sign]
         if rows.empty:
             return {}, ""
-        abi, text_sign = rows.iloc[0]["abi"], rows.iloc[0]["text_sign"]
-        return json.loads(abi), text_sign
+
+        # If there are multiple rows, return the one with the highest score
+        rows = rows.sort_values(by="score", ascending=False)
+
+        # Return all rows
+        return tuple(zip(rows["abi"], rows["text_sign"]))
 
 
 class SignatureFactory:
