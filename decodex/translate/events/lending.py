@@ -1,21 +1,21 @@
+from typing import Optional
+from typing import Tuple
+
 from multicall import Multicall
-from decodex.convert.address import AddrTagger
-from decodex.convert.signature import SignatureLookUp
-from decodex.type import (
-    EventHandleFunc,
-    EventPayload,
-    Action,
-    DepositAction,
-    BorrowAction,
-    WithdrawAction,
-    RepayAction,
-    SupplyAction,
-    FlashloanAction,
-    EnableCollateralAction,
-    DisableCollateralAction,
-)
-from typing import Tuple, Optional
+
 from .dex import Events
+from decodex.convert.address import AddrTagger
+from decodex.type import Action
+from decodex.type import BorrowAction
+from decodex.type import DepositAction
+from decodex.type import DisableCollateralAction
+from decodex.type import EnableCollateralAction
+from decodex.type import EventHandleFunc
+from decodex.type import EventPayload
+from decodex.type import FlashloanAction
+from decodex.type import RepayAction
+from decodex.type import SupplyAction
+from decodex.type import WithdrawAction
 
 
 class AAVEV2Events(Events):
@@ -36,7 +36,7 @@ class AAVEV2Events(Events):
             token_addr = payload["params"]["reserve"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return DepositAction(
                 pool=pool,
                 token=token,
@@ -53,7 +53,7 @@ class AAVEV2Events(Events):
             token_addr = payload["params"]["reserve"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return BorrowAction(
                 pool=pool,
                 token=token,
@@ -70,7 +70,7 @@ class AAVEV2Events(Events):
             token_addr = payload["params"]["reserve"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return WithdrawAction(
                 pool=pool,
                 token=token,
@@ -87,7 +87,7 @@ class AAVEV2Events(Events):
             token_addr = payload["params"]["reserve"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return RepayAction(
                 pool=pool,
                 token=token,
@@ -104,7 +104,7 @@ class AAVEV2Events(Events):
             token_addr = payload["params"]["asset"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return FlashloanAction(
                 pool=pool,
                 token=token,
@@ -132,7 +132,7 @@ class AAVEV3Events(Events):
             token_addr = payload["params"]["reserve"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return SupplyAction(
                 pool=pool,
                 token=token,
@@ -149,7 +149,7 @@ class AAVEV3Events(Events):
             token_addr = payload["params"]["reserve"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return BorrowAction(
                 pool=pool,
                 token=token,
@@ -169,7 +169,7 @@ class AAVEV3Events(Events):
             token_addr = payload["params"]["asset"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return FlashloanAction(
                 pool=pool,
                 token=token,
@@ -186,7 +186,7 @@ class AAVEV3Events(Events):
             token_addr = payload["params"]["reserve"]
             (token_decimals,) = self._get_token_decimals(token_addr)
             amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return RepayAction(
                 pool=pool,
                 token=token,
@@ -201,7 +201,7 @@ class AAVEV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return EnableCollateralAction(
                 pool=pool,
                 token=token,
@@ -215,7 +215,7 @@ class AAVEV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            pool, token = self.tagger([payload["address"], token_addr])
+            pool, token = self._tagger([payload["address"], token_addr])
             return DisableCollateralAction(
                 pool=pool,
                 token=token,

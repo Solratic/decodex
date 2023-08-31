@@ -33,6 +33,21 @@ class UTF8Message(Action):
 
 
 @dataclass(frozen=True)
+class TransferAction(Action):
+    """
+    Represents a transfer of tokens from one address to another.
+    """
+
+    sender: TaggedAddr
+    receiver: TaggedAddr
+    token: TaggedAddr
+    amount: float
+
+    def __repr__(self):
+        return f"{fmt_addr(self.sender)} transferred {self.amount} {fmt_addr(self.token)} to {fmt_addr(self.receiver)}"
+
+
+@dataclass(frozen=True)
 class SwapAction(Action):
     """
     Represents a swap action between two tokens.

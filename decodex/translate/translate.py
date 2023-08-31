@@ -97,7 +97,7 @@ class Translator:
             assert defi in self.evt_opts, f"defi protocol {defi} is not yet supported"
             cls = self.evt_opts.get(defi)(self.mc, self.tagger, self.sig_lookup)
             for attr in dir(cls):
-                if attr.startswith("_") or attr in {"tagger", "mc"}:
+                if attr.startswith("_"):
                     continue
                 handle_func = getattr(cls, attr)
                 if not callable(handle_func):
