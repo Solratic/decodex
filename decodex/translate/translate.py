@@ -105,7 +105,7 @@ class Translator:
 
     def translate(self, txhash: str, *, max_workers: int = 10) -> TaggedTx:
         tx: Tx = self.searcher.get_tx(txhash)
-        return self._process_tx(tx, max_workers=max_workers)
+        return self._process_tx(tx, max_workers=max_workers, show_balance=False)
 
     def simulate(
         self,
@@ -132,7 +132,7 @@ class Translator:
             gas_price=gas_price,
             timeout=timeout,
         )
-        return self._process_tx(simulated_tx, max_workers=max_workers)
+        return self._process_tx(simulated_tx, max_workers=max_workers, show_balance=True)
 
     @classmethod
     def supported_defis(cls) -> List[str]:
@@ -176,7 +176,7 @@ class Translator:
                     self.logger.error(f"Error when decoding log {log} with error {e}")
         return None
 
-    def _get_balance_of(
+    def _get_erc20_balabce(
         self,
         addr_token_pairs: Iterable[Tuple[str, str]],
         blk_num: int,
@@ -250,7 +250,7 @@ class Translator:
             addr_token_pairs.add((sender, token))
             addr_token_pairs.add((receiver, token))
 
-        initial_balances = self._get_balance_of(addr_token_pairs, blk_num)
+        initial_balances = self._get_erc20_balabce(addr_token_pairs, blk_num)
 
         balance_changed: Dict[str, Dict[str, AssetBalanceChanged]] = {}
         for account, token in addr_token_pairs:
@@ -304,7 +304,7 @@ class Translator:
 
         return account_balance_changed_list
 
-    def _process_tx(self, tx: Tx, max_workers: int) -> TaggedTx:
+    def _process_tx(self, tx: Tx, max_workers: int, show_balance: bool) -> TaggedTx:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             actions = executor.map(self._decode_log, tx["logs"])
         actions = [x for x in actions if x is not None]
@@ -317,13 +317,15 @@ class Translator:
                 transfers.append(action)
             else:
                 others.append(action)
-
-        bal_changed = self._process_transfer(
-            actions=transfers,
-            eth_balance_changes=tx["eth_balance_changes"],
-            blk_num=tx["block_number"],
-            max_workers=max_workers,
-        )
+        if show_balance:
+            bal_changed = self._process_transfer(
+                actions=transfers,
+                eth_balance_changes=tx["eth_balance_changes"],
+                blk_num=tx["block_number"],
+                max_workers=max_workers,
+            )
+        else:
+            bal_changed = []
 
         blk_time = datetime.fromtimestamp(tx["block_timestamp"], tz=pytz.utc)
         (tx_from, tx_to) = self.tagger([tx["from"], tx["to"]])
@@ -341,14 +343,15 @@ class Translator:
 
         return {
             "txhash": tx["txhash"],
-            "actions": actions,
             "from": tx_from,
             "to": tx_to,
+            "block_number": tx["block_number"],
             "block_time": blk_time,
             "value": parse_ether(tx["value"]),
             "gas_used": tx["gas_used"],
             "gas_price": parse_gwei(tx["gas_price"]),
             "input": tx["input"],
             "status": tx["status"],
+            "actions": actions,
             "balance_change": bal_changed,
         }
