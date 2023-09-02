@@ -186,7 +186,20 @@ class Translator:
             try:
                 abi = json.loads(abi)
                 _, params = eth_decode_input(abi, data)
-                return f"{abi['name']}({', '.join(list(params.keys()))})"
+                func = abi["name"]
+                # Format the output string into funcA(arg1=a, arg2=b)
+                if len(params) > 0:
+                    func += (
+                        "("
+                        + ", ".join(
+                            [
+                                f"{k}={v}" if abi["inputs"][_]["type"] not in {"bytes[]"} else f"{k}=..."
+                                for _, (k, v) in enumerate(params.items())
+                            ]
+                        )
+                        + ")"
+                    )
+                return func
             except Exception as e:
                 if self.verbose:
                     traceback.print_exc()
