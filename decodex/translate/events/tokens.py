@@ -11,7 +11,7 @@ from decodex.type import EventPayload
 from decodex.type import TransferAction
 
 
-class ERC20(Events):
+class ERC20Events(Events):
     """
     Standard ERC20 token events.
     """
@@ -27,13 +27,14 @@ class ERC20(Events):
 
     def transfer(self) -> Tuple[str, EventHandleFunc]:
         # Transfer (index_topic_1 address from, index_topic_2 address to, uint256 value)
-        text_sig = "Transfer(address,address,value)"
+        text_sig = "Transfer(address,address,uint256)"
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["address"]
             (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["value"] / 10**token_decimals
-            token, sender, receiver = self._tagger([token_addr, payload["from"], payload["to"]])
+            params = payload["params"]
+            amount = params["value"] / 10**token_decimals
+            token, sender, receiver = self._tagger([token_addr, params["from"], params["to"]])
             return TransferAction(
                 sender=sender,
                 receiver=receiver,
@@ -44,7 +45,7 @@ class ERC20(Events):
         return text_sig, decoder
 
 
-class ERC721(Events):
+class ERC721Events(Events):
     def __init__(
         self,
         mc: Multicall,
