@@ -76,6 +76,7 @@ TaggedTx = TypedDict(
         "gas_price": int,  # gas price of the transaction, in Gwei.
         "input": str,  # input data of the transaction, hex string. 0x prefixed.
         "status": int,  # status of the transaction
+        "method": str,  # calling method of the transaction
         "actions": List[str],  # actions of the transaction
         "balance_change": AccountBalanceChanged,  # balance change of the transaction
     },

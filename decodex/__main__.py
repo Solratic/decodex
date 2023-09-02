@@ -7,6 +7,7 @@ import click
 import pyfiglet
 from colorama import Fore
 from colorama import Style
+from jinja2 import Template
 from tabulate import tabulate
 
 from .constant import DECODEX_DIR
@@ -103,17 +104,33 @@ def explain(
         # If txhash is provided
         tagged_tx = translator.translate(txhash=txhash)
 
-    tmpl = """
-Transaction: {txhash}
-Blocktime: {blocktime}
-From: {from_addr}
-To: {to_addr}
-Value: {value}
-GasUsed: {gas_used}
-Gas Price: {gas_price}
-Status: {status}
-{action_field}{actions}
+    tmpl = Template(
+        """\
+Transaction: {{txhash}}
+Blocktime: {{blocktime}}
+From: {{from_addr}}
+To: {{to_addr}}
+Value: {{value}}
+GasUsed: {{gas_used}}
+Gas Price: {{gas_price}}
+Status: {{status}}
+{% if method -%}
+Method: {{method}}
+{% endif -%}
+{% if actions -%}
+
+Actions
+------
+{{actions}}
+{% endif -%}
+{% if balance_change -%}
+
+Balance Changes
+--------------
+{{balance_change}}
+{% endif -%}
 """
+    )
     txhash = tagged_tx["txhash"]
     blocktime = fmt_blktime(tagged_tx["block_time"])
     from_addr = fmt_addr(tagged_tx["from"])
@@ -123,13 +140,10 @@ Status: {status}
     gas_price = fmt_gas(tagged_tx["gas_price"])
     status = fmt_status(tagged_tx["status"])
 
-    action_existed = len(tagged_tx["actions"]) != 0
-    action_str = ""
-    if action_existed:
-        action_str += "\n".join(f"- {a}" for a in tagged_tx["actions"])
-    indented_actions = indent(action_str, "    ")  # Indent actions by 4 spaces
+    action_str = "\n".join(f"- {a}" for a in tagged_tx["actions"])
+    indented_actions = indent(action_str, " " * 4)
 
-    render = tmpl.format(
+    render = tmpl.render(
         txhash=txhash,
         blocktime=blocktime,
         from_addr=from_addr,
@@ -138,7 +152,7 @@ Status: {status}
         gas_used=gas_used,
         gas_price=gas_price,
         status=status,
-        action_field="Actions:\n" if action_existed else "",
+        method=tagged_tx["method"],
         actions=indented_actions,
     )
 

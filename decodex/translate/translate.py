@@ -23,6 +23,7 @@ from decodex.convert.address import AddrTagger
 from decodex.convert.address import TaggerFactory
 from decodex.convert.signature import SignatureFactory
 from decodex.convert.signature import SignatureLookUp
+from decodex.decode import eth_decode_input
 from decodex.decode import eth_decode_log
 from decodex.search import SearcherFactory
 from decodex.translate.events import AAVEV2Events
@@ -176,6 +177,20 @@ class Translator:
                     self.logger.error(f"Error when decoding log {log} with error {e}")
         return None
 
+    def _decode_input(self, data: str) -> str:
+        if not data or len(data) < 10:
+            return ""
+        func_selector = data[:10]
+        candidates = self.sig_lookup(func_selector)
+        for abi, _ in candidates:
+            try:
+                abi = json.loads(abi)
+                _, params = eth_decode_input(abi, data)
+                return f"{abi['name']}({', '.join(list(params.keys()))})"
+            except Exception as e:
+                continue
+        return func_selector
+
     def _get_erc20_balabce(
         self,
         addr_token_pairs: Iterable[Tuple[str, str]],
@@ -305,6 +320,7 @@ class Translator:
         return account_balance_changed_list
 
     def _process_tx(self, tx: Tx, max_workers: int, show_balance: bool) -> TaggedTx:
+        # Decode the events
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             actions = executor.map(self._decode_log, tx["logs"])
         actions = [x for x in actions if x is not None]
@@ -327,9 +343,16 @@ class Translator:
         else:
             bal_changed = []
 
+        # Get the time of the block
         blk_time = datetime.fromtimestamp(tx["block_timestamp"], tz=pytz.utc)
+
+        # Tag the addresses
         (tx_from, tx_to) = self.tagger([tx["from"], tx["to"]])
 
+        # Get the method
+        method = self._decode_input(tx["input"])
+
+        # If there are other actions, then ignore transfers
         if len(others) > 0:
             actions = others
         elif len(transfers) > 0:
@@ -353,5 +376,6 @@ class Translator:
             "input": tx["input"],
             "status": tx["status"],
             "actions": actions,
+            "method": method,
             "balance_change": bal_changed,
         }

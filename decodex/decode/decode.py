@@ -7,6 +7,42 @@ from typing import Tuple
 from eth_abi.abi import decode_abi
 
 
+def eth_decode_input(abi: Dict, data: str) -> Tuple[str, Dict]:
+    """
+    Decodes Ethereum input given the ABI and data.
+
+    Parameters
+    ----------
+    abi : Dict
+        The ABI of the function.
+    data : str
+        The data associated with the function.
+
+    Returns
+    -------
+    Tuple[str, Dict]
+        The function signature and the parameters decoded from the input.
+
+    """
+
+    # Ensure ABI is a valid function
+    if "name" not in abi or abi.get("type") != "function":
+        return "{}", {}
+
+    # Separate inputs into indexed and non-indexed
+    indexed_inputs, non_indexed_inputs = _partition_inputs(abi.get("inputs", []))
+
+    func_signature = _create_function_signature(abi["name"], indexed_inputs + non_indexed_inputs)
+
+    # Decode values from data
+    values = _decode_values_from_data(indexed_inputs + non_indexed_inputs, data)
+
+    # Convert byte data to hex
+    _convert_bytes_to_hex(values)
+
+    return func_signature, values
+
+
 def eth_decode_log(event_abi: Dict, topics: List[str], data: str) -> Tuple[str, Dict]:
     """
     Decodes Ethereum log given the event ABI, topics, and data.
