@@ -71,6 +71,7 @@ def download(chain: str):
 @click.option("--block", type=str, help="Block number of the transaction", default="latest")
 @click.option("--chain", "-c", type=click.Choice(["ethereum"]), default="ethereum", help="Chain to use for decoding")
 @click.option("--provider-uri", "-p", type=str, default=os.getenv("WEB3_PROVIDER_URI", "http://localhost:8545"))
+@click.option("--verbose", "-v", is_flag=True, help="Verbose mode", default=False)
 def explain(
     txhash: str,
     from_addr: str,
@@ -80,8 +81,9 @@ def explain(
     block: Union[Literal["latest"], int],
     chain: str,
     provider_uri: str,
+    verbose: bool,
 ):
-    translator = Translator(provider_uri=provider_uri, chain=chain, verbose=True)
+    translator = Translator(provider_uri=provider_uri, chain=chain, verbose=verbose)
     if txhash is None:
         # If txhash is not provided, then from_addr, to_addr, value, input_data must be provided to simulate a transaction
         assert (

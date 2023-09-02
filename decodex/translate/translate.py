@@ -188,6 +188,9 @@ class Translator:
                 _, params = eth_decode_input(abi, data)
                 return f"{abi['name']}({', '.join(list(params.keys()))})"
             except Exception as e:
+                if self.verbose:
+                    traceback.print_exc()
+                    self.logger.error(f"Error when decoding input {data} with error {e}")
                 continue
         return func_selector
 

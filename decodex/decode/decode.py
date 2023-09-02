@@ -5,6 +5,7 @@ from typing import List
 from typing import Tuple
 
 from eth_abi.abi import decode_abi
+from eth_abi.abi import decode_single
 
 
 def eth_decode_input(abi: Dict, data: str) -> Tuple[str, Dict]:
@@ -30,12 +31,12 @@ def eth_decode_input(abi: Dict, data: str) -> Tuple[str, Dict]:
         return "{}", {}
 
     # Separate inputs into indexed and non-indexed
-    indexed_inputs, non_indexed_inputs = _partition_inputs(abi.get("inputs", []))
+    inputs = abi.get("inputs", [])
 
-    func_signature = _create_function_signature(abi["name"], indexed_inputs + non_indexed_inputs)
+    func_signature = _create_function_signature(abi["name"], inputs)
 
     # Decode values from data
-    values = _decode_values_from_data(indexed_inputs + non_indexed_inputs, data)
+    values = _decode_values_from_data(inputs, data[10:])
 
     # Convert byte data to hex
     _convert_bytes_to_hex(values)
@@ -73,7 +74,7 @@ def eth_decode_log(event_abi: Dict, topics: List[str], data: str) -> Tuple[str, 
     func_signature = _create_function_signature(event_abi["name"], indexed_inputs + non_indexed_inputs)
 
     indexed_values = _decode_values_from_topics(indexed_inputs, topics)
-    non_indexed_values = _decode_values_from_data(non_indexed_inputs, data)
+    non_indexed_values = _decode_values_from_data(non_indexed_inputs, data[2:])
 
     # Merge indexed and non-indexed values
     parameters = _merge_parameters(indexed_values, non_indexed_values)
@@ -163,7 +164,7 @@ def _decode_values_from_data(non_indexed_inputs: List[Dict], data: str) -> Dict:
     non_indexed_inputs : List[Dict]
         List of non-indexed inputs.
     data : str
-        The associated data.
+        The associated data. CAN NOT CONTAINS THE 0x PREFIX.
 
     Returns
     -------
@@ -172,7 +173,7 @@ def _decode_values_from_data(non_indexed_inputs: List[Dict], data: str) -> Dict:
 
     """
     types = [input["type"] for input in non_indexed_inputs]
-    values = decode_abi(types, bytes.fromhex(data[2:]))
+    values = decode_abi(types, bytes.fromhex(data))
     return dict(zip((input["name"] for input in non_indexed_inputs), values))
 
 
