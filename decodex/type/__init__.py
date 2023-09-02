@@ -18,6 +18,8 @@ from .action_type import UTF8Message
 from .action_type import WithdrawAction
 from .rpc_type import RawTraceCallResponse
 from .rpc_type import TraceCallResponse
+from .tx_type import AccountBalanceChanged
+from .tx_type import AssetBalanceChanged
 from .tx_type import EventPayload
 from .tx_type import Log
 from .tx_type import TaggedAddr
@@ -51,4 +53,6 @@ __all__ = [
     "RpcRequest",
     "RawTraceCallResponse",
     "TraceCallResponse",
+    "AssetBalanceChanged",
+    "AccountBalanceChanged",
 ]

@@ -21,6 +21,7 @@ Tx = TypedDict(
         "txhash": str,  # transaction hash, hex string. 0x prefixed.
         "from": str,  # from address, hex string. 0x prefixed.
         "to": str,  # to address, hex string. 0x prefixed.
+        "block_number": int,  # block number of the transaction
         "block_timestamp": int,  # timestamp of the block, in seconds.
         "value": int,  # value of the transaction, in wei.
         "gas_used": int,  # gas used by the transaction, in wei.
@@ -40,12 +41,33 @@ TaggedAddr = TypedDict(
     },
 )
 
+AssetBalanceChanged = TypedDict(
+    "BalanceChange",
+    {
+        "asset": TaggedAddr,  # address of the asset
+        "balance_before": float,  # balance before the transaction
+        "balance_change": float,  # balance change of the asset
+        "balance_after": float,  # balance after the transaction
+    },
+)
+
+
+AccountBalanceChanged = TypedDict(
+    "AccountBalanceChanged",
+    {
+        "address": TaggedAddr,  # address of the account
+        "assets": List[AssetBalanceChanged],  # balance change of each asset
+    },
+)
+
+
 TaggedTx = TypedDict(
     "TaggedTx",
     {
         "txhash": str,  # transaction hash, hex string. 0x prefixed.
         "from": TaggedAddr,  # from address, hex string. 0x prefixed.
         "to": TaggedAddr,  # to address, hex string. 0x prefixed.
+        "block_number": int,  # block number of the transaction
         "block_time": datetime,  # datetime of the block
         "value": int,  # value of the transaction, in Ether.
         "gas_used": int,  # gas used by the transaction, in Gwei.
@@ -53,8 +75,10 @@ TaggedTx = TypedDict(
         "input": str,  # input data of the transaction, hex string. 0x prefixed.
         "status": int,  # status of the transaction
         "actions": List[str],  # actions of the transaction
+        "balance_change": AccountBalanceChanged,  # balance change of the transaction
     },
 )
+
 
 EventPayload = TypedDict(
     "EventPayload",
