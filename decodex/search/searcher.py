@@ -102,6 +102,23 @@ class Web3Searcher(BaseSearcher):
             }
             for log in tx_receipt["logs"]
         ]
+
+        status = tx_receipt["status"]
+        reason = ""
+        if status == 0:
+            try:
+                self.web3.eth.call(
+                    {
+                        "from": tx["from"],
+                        "to": tx["to"],
+                        "value": tx["value"],
+                        "data": tx["input"],
+                    },
+                    tx_receipt["blockNumber"],
+                )
+            except Exception as e:
+                reason = str(e)
+
         return {
             "txhash": tx_receipt["transactionHash"].hex(),
             "from": tx["from"],
@@ -112,7 +129,8 @@ class Web3Searcher(BaseSearcher):
             "gas_used": tx_receipt["gasUsed"],
             "gas_price": tx["gasPrice"],
             "input": tx["input"],
-            "status": tx_receipt["status"],
+            "status": status,
+            "reason": reason,
             "logs": logs,
         }
 
@@ -212,6 +230,7 @@ class Web3Searcher(BaseSearcher):
             "gas_price": gas_price,
             "input": data,
             "status": 1,
+            "reason": "",
             "logs": logs,
             "eth_balance_changes": eth_balance_changes,
         }

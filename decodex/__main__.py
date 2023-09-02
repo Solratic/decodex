@@ -115,7 +115,7 @@ To: {{to_addr}}
 Value: {{value}}
 GasUsed: {{gas_used}}
 Gas Price: {{gas_price}}
-Status: {{status}}
+Status: {{status}}{% if reason %} ({{reason}}){% endif %}
 {% if method -%}
 Method: {{method}}
 {% endif -%}
@@ -141,6 +141,7 @@ Balance Changes
     gas_used = f'{tagged_tx["gas_used"]}'
     gas_price = fmt_gas(tagged_tx["gas_price"])
     status = fmt_status(tagged_tx["status"])
+    reason = tagged_tx["reason"]
 
     action_str = "\n".join(f"- {a}" for a in tagged_tx["actions"])
     indented_actions = indent(action_str, " " * 4)
@@ -154,6 +155,7 @@ Balance Changes
         gas_used=gas_used,
         gas_price=gas_price,
         status=status,
+        reason=reason,
         method=tagged_tx["method"],
         actions=indented_actions,
     )

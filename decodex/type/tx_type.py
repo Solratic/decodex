@@ -57,9 +57,11 @@ Tx = TypedDict(
         "gas_price": int,  # gas price of the transaction, in wei.
         "input": str,  # input data of the transaction, hex string. 0x prefixed.
         "status": int,  # status of the transaction
+        "reason": str,  # reason of the transaction if failed
         "logs": List[Log],  # logs of the transaction
         "eth_balance_changes": Dict[str, Dict[Literal["ETH"], int]],  # ETH balance change of the transaction
     },
+    total=False,
 )
 
 
@@ -76,10 +78,12 @@ TaggedTx = TypedDict(
         "gas_price": int,  # gas price of the transaction, in Gwei.
         "input": str,  # input data of the transaction, hex string. 0x prefixed.
         "status": int,  # status of the transaction
+        "reason": str,  # reason of the transaction if failed
         "method": str,  # calling method of the transaction
         "actions": List[str],  # actions of the transaction
         "balance_change": AccountBalanceChanged,  # balance change of the transaction
     },
+    total=False,
 )
 
 

@@ -391,6 +391,7 @@ class Translator:
             "gas_price": parse_gwei(tx["gas_price"]),
             "input": tx["input"],
             "status": tx["status"],
+            "reason": tx["reason"],
             "actions": actions,
             "method": method,
             "balance_change": bal_changed,

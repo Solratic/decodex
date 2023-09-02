@@ -220,4 +220,4 @@ def _convert_bytes_to_hex(parameters: Dict) -> None:
         if isinstance(val, (bytes, bytearray)):
             parameters[key] = val.hex()
         elif isinstance(val, tuple):
-            parameters[key] = tuple(e.hex() for e in val)
+            parameters[key] = tuple(e.hex() if isinstance(e, (bytes, bytearray)) else e for e in val)
