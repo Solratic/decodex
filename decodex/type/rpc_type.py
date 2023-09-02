@@ -3,75 +3,52 @@ from typing import List
 from typing import Literal
 from typing import Optional
 from typing import TypedDict
+from typing import Union
 
 from .tx_type import Log
 
-CallType = Literal["CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"]
 
-RawCall = TypedDict(
-    "Call",
+RawTraceCall = TypedDict(
+    "RawTraceCall",
     {
-        "type": CallType,  # Four possible values: CALL, CALLCODE, DELEGATECALL, STATICCALL
-        "from": str,  # Address of the account that initiated the call, 0x prefixed
-        "to": str,  # Address of the account that will be called, 0x prefixed
-        "value": str,  # Value transferred in wei, 0x prefixed
-        "gas": str,  # Gas provided by the caller, 0x prefixed
-        "gasUsed": str,  # Gas used by the call, 0x prefixed
-        "input": str,  # Input data, 0x prefixed
-        "output": Optional[str],  # Output data, 0x prefixed. Might be null if the call do not return anything
-        "logs": List[Log],  # Array of log objects, which this call generated
+        "from": str,
+        "gas": str,
+        "gasUsed": str,
+        "input": str,
+        "logs": List[Log],
+        "output": str,
+        "to": str,
+        "type": Literal["CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"],
+        "value": str,
+        "calls": List["RawTraceCall"],
     },
-)
-
-Call = TypedDict(
-    "Call",
-    {
-        "type": CallType,  # Four possible values: CALL, CALLCODE, DELEGATECALL, STATICCALL
-        "from": str,  # Address of the account that initiated the call, 0x prefixed
-        "to": str,  # Address of the account that will be called, 0x prefixed
-        "value": int,  # Value transferred in wei, 0x prefixed
-        "gas": int,  # Gas provided by the caller, 0x prefixed
-        "gasUsed": int,  # Gas used by the call, 0x prefixed
-        "input": str,  # Input data, 0x prefixed
-        "output": Optional[str],  # Output data, 0x prefixed. Might be null if the call do not return anything
-        "logs": List[Log],  # Array of log objects, which this call generated
-    },
-)
-
-
-RpcError = TypedDict(
-    "RpcError",
-    {
-        "code": int,
-        "message": str,
-        "gasFeeCap": int,
-        "baseFee": int,
-    },
+    total=False,
 )
 
 RawTraceCallResult = TypedDict(
     "RawTraceCallResult",
     {
-        "calls": List[RawCall],
+        "from": str,
+        "gas": str,
+        "gasUsed": str,
+        "input": str,
+        "to": str,
+        "type": Literal["CALL", "CALLCODE", "DELEGATECALL", "STATICCALL"],
+        "calls": List[RawTraceCall],
     },
+    total=False,
 )
 
-RawTraceCallResponse = TypedDict(
-    "RawTraceCallResponse",
-    {
-        "id": int,
-        "jsonrpc": str,
-        "result": Optional[RawTraceCallResult],
-        "error": Optional[RpcError],
-    },
-)
 
-TraceCallResponse = TypedDict(
-    "TraceCallResponse",
-    {
-        "id": int,
-        "jsonrpc": str,
-        "result": List[Call],
-        "error": RpcError,
-    },
-)
+class RPCError(TypedDict, total=False):
+    code: int
+    message: str
+    gasFeeCap: int
+    baseFee: int
+
+
+class RawTraceCallResponse(TypedDict, total=False):
+    id: Union[str, int]
+    jsonrpc: str
+    result: RawTraceCallResult
+    error: Optional[RPCError]

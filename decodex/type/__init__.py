@@ -17,7 +17,7 @@ from .action_type import TransferAction
 from .action_type import UTF8Message
 from .action_type import WithdrawAction
 from .rpc_type import RawTraceCallResponse
-from .rpc_type import TraceCallResponse
+from .rpc_type import RawTraceCallResult
 from .tx_type import AccountBalanceChanged
 from .tx_type import AssetBalanceChanged
 from .tx_type import EventPayload
@@ -52,7 +52,7 @@ __all__ = [
     "SupplyAction",
     "RpcRequest",
     "RawTraceCallResponse",
-    "TraceCallResponse",
+    "RawTraceCallResult",
     "AssetBalanceChanged",
     "AccountBalanceChanged",
 ]

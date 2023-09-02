@@ -1,18 +1,25 @@
+import json
 import os
+import uuid
 from abc import ABC
 from abc import abstractmethod
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from typing import Dict
+from typing import List
 from typing import Literal
-from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import requests
 from web3 import Web3
 from web3.types import Wei
 
 from decodex.exceptions import RPCException
+from decodex.type import AccountBalanceChanged
 from decodex.type import Log
 from decodex.type import RawTraceCallResponse
+from decodex.type import RawTraceCallResult
 from decodex.type import Tx
 
 
@@ -31,6 +38,7 @@ class BaseSearcher(ABC):
         to_address: str,
         value: Wei,
         data: str,
+        block: Union[int, Literal["latest"]] = "latest",
         gas: Union[Wei, Literal["auto"]] = "auto",
         gas_price: Union[Wei, Literal["auto"]] = "auto",
         timeout: int = 120,
@@ -73,6 +81,7 @@ class Web3Searcher(BaseSearcher):
 
         if isinstance(provider, str):
             w3 = Web3(Web3.HTTPProvider(provider))
+            self.provider = provider
             self.web3 = w3
         else:
             raise TypeError("provider must be a Web3 http provider URI")
@@ -107,12 +116,35 @@ class Web3Searcher(BaseSearcher):
             "logs": logs,
         }
 
+    def _parse_calls(self, result: RawTraceCallResult) -> Tuple[List[Log], Dict[str, int]]:
+        """
+        Recursively parse the calls and return logs and balance changes.
+        Balance changes are represented as a dict of address and value in Wei.
+        """
+        logs: List[Log] = []
+        balance_changes = defaultdict(int)
+        for call in result["calls"]:
+            if "logs" in call:
+                logs += call["logs"]
+            if "value" in call:
+                value = int(call["value"], 16)
+                if value != 0:
+                    balance_changes[call["from"]] -= value
+                    balance_changes[call["to"]] += value
+            if "calls" in call:
+                _logs, _balance_changes = self._parse_calls(call)
+                logs += _logs
+                for addr, value in _balance_changes.items():
+                    balance_changes[addr] += value
+        return logs, balance_changes
+
     def simluate_tx(
         self,
         from_address: str,
         to_address: str,
         value: Wei,
         data: str,
+        block: Union[int, Literal["latest"]] = "latest",
         gas: Union[Wei, Literal["auto"]] = "auto",
         gas_price: Union[Wei, Literal["auto"]] = "auto",
         timeout: int = 120,
@@ -120,7 +152,12 @@ class Web3Searcher(BaseSearcher):
         """
         Simluates a transaction and returns the trace result.
         """
-        blk = self.web3.eth.get_block("latest")
+        assert isinstance(block, int) or block == "latest", "block must be an integer or 'latest'"
+        assert isinstance(gas, int) or gas == "auto", "gas must be an integer or 'auto'"
+        assert isinstance(gas_price, int) or gas_price == "auto", "gas_price must be an integer or 'auto'"
+        assert timeout > 0, "timeout must be positive"
+
+        blk = self.web3.eth.get_block(block)
         if gas == "auto":
             gas = self.web3.eth.estimate_gas(
                 {
@@ -149,9 +186,19 @@ class Web3Searcher(BaseSearcher):
                 "tracerConfig": {"withLog": True},
             },
         ]
-        resp: RawTraceCallResponse = self.web3.provider.make_request("debug_traceCall", params)
+        uid = str(uuid.uuid4())
+        payload = {"jsonrpc": "2.0", "method": "debug_traceCall", "params": params, "id": uid}
+        headers = {"Content-Type": "application/json"}
+
+        resp: RawTraceCallResponse = requests.request(
+            method="POST", url=self.provider, headers=headers, data=json.dumps(payload)
+        ).json()
+
         if resp.get("error", {}):
             raise RPCException(resp["error"]["code"], resp["error"]["message"])
+
+        logs, account_balance = self._parse_calls(resp["result"])
+        eth_balance_changes = {addr: {"ETH": wei} for addr, wei in account_balance.items()}
 
         result = resp.get("result", {})
         tx: Tx = {
@@ -165,7 +212,8 @@ class Web3Searcher(BaseSearcher):
             "gas_price": gas_price,
             "input": data,
             "status": 1,
-            "logs": result.get("logs", []),
+            "logs": logs,
+            "eth_balance_changes": eth_balance_changes,
         }
         return tx
 

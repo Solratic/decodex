@@ -96,6 +96,7 @@ class Translator:
         self.searcher = SearcherFactory.create("web3", uri=provider_uri)
         self.mc = Multicall(provider_uri, logger=logger)
         self.hdlrs: Dict[str, EventHandleFunc] = {}
+        self.web3 = Web3(Web3.HTTPProvider(provider_uri))
         self.__register__(self.evt_opts.keys() if defis == "all" else defis)
 
         self.verbose = verbose
@@ -106,9 +107,32 @@ class Translator:
         tx: Tx = self.searcher.get_tx(txhash)
         return self._process_tx(tx, max_workers=max_workers)
 
-    def simulate(self, from_address: str, to_address: str, value: int, data: str, *, max_workers: int = 10) -> TaggedTx:
-        tx: Tx = self.searcher.simluate_tx(from_address=from_address, to_address=to_address, value=value, data=data)
-        return self._process_tx(tx, max_workers=max_workers)
+    def simulate(
+        self,
+        from_address: str,
+        to_address: str,
+        value: int,
+        data: str,
+        block: Union[int, Literal["latest"]] = "latest",
+        *,
+        gas: Union[int, Literal["auto"]] = "auto",
+        gas_price: Union[int, Literal["auto"]] = "auto",
+        timeout: int = 120,
+        max_workers: int = 10,
+    ) -> TaggedTx:
+        from_address = Web3.toChecksumAddress(from_address.lower())
+        to_address = Web3.toChecksumAddress(to_address.lower())
+        simulated_tx = self.searcher.simluate_tx(
+            from_address=from_address,
+            to_address=to_address,
+            value=value,
+            data=data,
+            block=block,
+            gas=gas,
+            gas_price=gas_price,
+            timeout=timeout,
+        )
+        return self._process_tx(simulated_tx, max_workers=max_workers)
 
     @classmethod
     def supported_defis(cls) -> List[str]:
@@ -174,7 +198,6 @@ class Translator:
                 )
             )
         decimals: Dict[str, int] = self.mc.agg(decimal_calls, as_dict=True)
-
         # Get all balances
         calls: List[Call] = []
         for addr, token in addr_token_pairs:
@@ -188,12 +211,29 @@ class Translator:
                 )
             )
         balances: Dict[str, int] = self.mc.agg(calls, as_dict=True)
-        return {addr_token: balances[addr_token] / 10 ** decimals[token] for addr_token in balances}
+        return {
+            str((addr, token)): balances[str((addr, token))] / 10 ** decimals[token] for addr, token in addr_token_pairs
+        }
 
-    def _process_erc20_transfer(
+    def _get_eth_balance(
+        self,
+        addrs: Iterable[str],
+        blk_num: int,
+        max_workers: int,
+    ) -> Dict[str, int]:
+        def proxy(addr: str) -> int:
+            return self.web3.eth.get_balance(addr, block_identifier=blk_num)
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            balances = executor.map(proxy, addrs)
+        return dict(zip(addrs, balances))
+
+    def _process_transfer(
         self,
         actions: List[TransferAction],
+        eth_balance_changes: Dict[str, Dict[Literal["ETH"], int]],
         blk_num: int,
+        max_workers: int,
     ) -> List[AccountBalanceChanged]:
         tagged_mapping: Dict[str, TaggedAddr] = {}
         addr_token_pairs = set()
@@ -222,7 +262,7 @@ class Translator:
                 "asset": tagged_mapping[token],
                 "balance_before": initial_balance,
                 "balance_change": 0.0,
-                "balance_after": 0.0,  # placeholder, to be calculated later
+                "balance_after": 0.0,
             }
 
         for action in actions:
@@ -238,10 +278,28 @@ class Translator:
             for token, changes in tokens.items():
                 changes["balance_after"] = changes["balance_before"] + changes["balance_change"]
 
+        # Put ETH balance changes into balance_changed
+        eth_initial_balance = self._get_eth_balance(
+            addrs=eth_balance_changes.keys(),
+            blk_num=blk_num,
+            max_workers=max_workers,
+        )
+        extra_account = set(eth_balance_changes.keys()) - set(tagged_mapping.keys())
+        eth_tagged_mapping = zip(extra_account, self.tagger(extra_account))
+        tagged_mapping.update(eth_tagged_mapping)
+        for account, changes in eth_balance_changes.items():
+            balance_changed[account]["ETH"] = {
+                "asset": {"address": "ETH", "name": "", "label": []},
+                "balance_before": Web3.fromWei(eth_initial_balance[account], "ether"),
+                "balance_change": Web3.fromWei(changes["ETH"], "ether"),
+                "balance_after": Web3.fromWei(eth_initial_balance[account] + changes["ETH"], "ether"),
+            }
+
         account_balance_changed_list: List[AccountBalanceChanged] = []
         for account, assets_dict in balance_changed.items():
             tagged_account = tagged_mapping[account]
             asset_list = list(assets_dict.values())
+            asset_list.sort(key=lambda x: x["balance_change"], reverse=True)
             account_balance_changed_list.append({"address": tagged_account, "assets": asset_list})
 
         return account_balance_changed_list
@@ -260,7 +318,12 @@ class Translator:
             else:
                 others.append(action)
 
-        bal_changed = self._process_erc20_transfer(transfers, tx["block_number"])
+        bal_changed = self._process_transfer(
+            actions=transfers,
+            eth_balance_changes=tx["eth_balance_changes"],
+            blk_num=tx["block_number"],
+            max_workers=max_workers,
+        )
 
         blk_time = datetime.fromtimestamp(tx["block_timestamp"], tz=pytz.utc)
         (tx_from, tx_to) = self.tagger([tx["from"], tx["to"]])

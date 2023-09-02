@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Any
-from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Literal
 from typing import TypedDict
 
 Log = TypedDict(
@@ -14,23 +14,6 @@ Log = TypedDict(
     },
 )
 
-
-Tx = TypedDict(
-    "Tx",
-    {
-        "txhash": str,  # transaction hash, hex string. 0x prefixed.
-        "from": str,  # from address, hex string. 0x prefixed.
-        "to": str,  # to address, hex string. 0x prefixed.
-        "block_number": int,  # block number of the transaction
-        "block_timestamp": int,  # timestamp of the block, in seconds.
-        "value": int,  # value of the transaction, in wei.
-        "gas_used": int,  # gas used by the transaction, in wei.
-        "gas_price": int,  # gas price of the transaction, in wei.
-        "input": str,  # input data of the transaction, hex string. 0x prefixed.
-        "status": int,  # status of the transaction
-        "logs": List[Log],  # logs of the transaction
-    },
-)
 
 TaggedAddr = TypedDict(
     "TaggedAddr",
@@ -57,6 +40,25 @@ AccountBalanceChanged = TypedDict(
     {
         "address": TaggedAddr,  # address of the account
         "assets": List[AssetBalanceChanged],  # balance change of each asset
+    },
+)
+
+
+Tx = TypedDict(
+    "Tx",
+    {
+        "txhash": str,  # transaction hash, hex string. 0x prefixed.
+        "from": str,  # from address, hex string. 0x prefixed.
+        "to": str,  # to address, hex string. 0x prefixed.
+        "block_number": int,  # block number of the transaction
+        "block_timestamp": int,  # timestamp of the block, in seconds.
+        "value": int,  # value of the transaction, in wei.
+        "gas_used": int,  # gas used by the transaction, in wei.
+        "gas_price": int,  # gas price of the transaction, in wei.
+        "input": str,  # input data of the transaction, hex string. 0x prefixed.
+        "status": int,  # status of the transaction
+        "logs": List[Log],  # logs of the transaction
+        "eth_balance_changes": Dict[str, Dict[Literal["ETH"], int]],  # ETH balance change of the transaction
     },
 )
 
