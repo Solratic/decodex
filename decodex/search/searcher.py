@@ -10,6 +10,7 @@ from typing import Union
 from web3 import Web3
 from web3.types import Wei
 
+from decodex.exceptions import RPCException
 from decodex.type import Log
 from decodex.type import RawTraceCallResponse
 from decodex.type import Tx
@@ -96,6 +97,7 @@ class Web3Searcher(BaseSearcher):
             "txhash": tx_receipt["transactionHash"].hex(),
             "from": tx["from"],
             "to": tx["to"],
+            "block_number": tx_receipt["blockNumber"],
             "block_timestamp": blk["timestamp"],
             "value": tx["value"],
             "gas_used": tx_receipt["gasUsed"],
@@ -148,11 +150,15 @@ class Web3Searcher(BaseSearcher):
             },
         ]
         resp: RawTraceCallResponse = self.web3.provider.make_request("debug_traceCall", params)
+        if resp.get("error", {}):
+            raise RPCException(resp["error"]["code"], resp["error"]["message"])
+
         result = resp.get("result", {})
         tx: Tx = {
             "txhash": "Simulation result",
             "from": from_address,
             "to": to_address,
+            "block_number": blk["number"],
             "block_timestamp": blk["timestamp"],
             "value": value,
             "gas_used": int(result["gasUsed"], 16),
