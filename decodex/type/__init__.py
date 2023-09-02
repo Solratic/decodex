@@ -15,12 +15,13 @@ from .action_type import SupplyAction
 from .action_type import SwapAction
 from .action_type import UTF8Message
 from .action_type import WithdrawAction
+from .rpc_type import RawTraceCallResponse
+from .rpc_type import TraceCallResponse
 from .tx_type import EventPayload
 from .tx_type import Log
 from .tx_type import TaggedAddr
 from .tx_type import TaggedTx
 from .tx_type import Tx
-
 
 __all__ = [
     "Tx",
@@ -45,4 +46,6 @@ __all__ = [
     "EnableCollateralAction",
     "DisableCollateralAction",
     "SupplyAction",
+    "RpcRequest",
+    "RawTraceCallResponse",
 ]

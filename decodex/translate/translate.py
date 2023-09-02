@@ -31,6 +31,7 @@ from decodex.translate.events import UniswapV3Events
 from decodex.type import Action
 from decodex.type import EventHandleFunc
 from decodex.type import TaggedTx
+from decodex.type import Tx
 from decodex.type import UTF8Message
 from decodex.utils import parse_ether
 from decodex.utils import parse_gwei
@@ -130,8 +131,7 @@ class Translator:
                     self.logger.error(f"Error when decoding log {log} with error {e}")
         return None
 
-    def translate(self, txhash: str, max_workers: int = 10) -> TaggedTx:
-        tx = self.searcher.search_tx(txhash)
+    def _process_tx(self, tx: Tx, max_workers: int) -> TaggedTx:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             actions = executor.map(self.decode_log, tx["logs"])
         actions = [x for x in actions if x is not None]
@@ -153,3 +153,11 @@ class Translator:
             "input": tx["input"],
             "status": tx["status"],
         }
+
+    def translate(self, txhash: str, *, max_workers: int = 10) -> TaggedTx:
+        tx: Tx = self.searcher.get_tx(txhash)
+        return self._process_tx(tx, max_workers=max_workers)
+
+    def simulate(self, from_address: str, to_address: str, value: int, data: str, *, max_workers: int = 10) -> TaggedTx:
+        tx: Tx = self.searcher.simluate_tx(from_address=from_address, to_address=to_address, value=value, data=data)
+        return self._process_tx(tx, max_workers=max_workers)

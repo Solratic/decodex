@@ -1,10 +1,13 @@
-from typing import TypedDict, List, Dict, Any, Callable
 from datetime import datetime
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import TypedDict
 
 Log = TypedDict(
     "Log",
     {
-        "logpos": int,  # log position in the transaction
         "address": str,  # contract address, hex string. 0x prefixed.
         "topics": List[str],  # topics of the log, each is a hex string of 0x prefixed.
         "data": str,  # data of the log, hex string. 0x prefixed.

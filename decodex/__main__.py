@@ -59,12 +59,16 @@ def download(chain: str):
 
 
 @cli.command(help="Explain the transaction by the given hash")
-@click.argument("txhash", required=True, type=str)
+@click.option("--txhash", type=str, help="Hash of the transaction", default=None)
+@click.option("--from-addr", type=str, help="Address of the sender", default=None)
+@click.option("--to-addr", type=str, help="Address of the receiver", default=None)
+@click.option("--value", type=float, help="Value in ether", default=None)
+@click.option("--input-data", type=str, help="Input data of the transaction", default=None)
 @click.option(
     "--chain",
     "-c",
-    default="ethereum",
     type=click.Choice(["ethereum"]),
+    default="ethereum",
     help="Chain to use for decoding",
 )
 @click.option(
@@ -74,9 +78,23 @@ def download(chain: str):
     default=os.getenv("WEB3_PROVIDER_URI", "http://localhost:8545"),
     help="Ethereum provider URI for transaction decoding",
 )
-def explain(txhash: str, chain: str, provider_uri: str):
+def explain(txhash: str, from_addr: str, to_addr: str, value: int, input_data: str, chain: str, provider_uri: str):
     translator = Translator(provider_uri=provider_uri, chain=chain, verbose=True)
-    tagged_tx = translator.translate(txhash)
+    if txhash is None:
+        # If txhash is not provided, then from_addr, to_addr, value, input_data must be provided to simulate a transaction
+        assert (
+            from_addr is not None and to_addr is not None and value is not None and input_data is not None
+        ), "Either txhash or [from_addr, to_addr, value, input_data] must be provided"
+        assert (
+            from_addr.startswith("0x") and to_addr.startswith("0x") and input_data.startswith("0x")
+        ), "from_addr, to_addr, input_data must be hex string"
+        assert value >= 0, "value must be non-negative"
+        value = int(value * 1e18)
+        tagged_tx = translator.simulate(from_address=from_addr, to_address=to_addr, value=value, input_data=input_data)
+    else:
+        # If txhash is provided
+        tagged_tx = translator.translate(txhash=txhash)
+
     tmpl = """
 Transaction: {txhash}
 Blocktime: {blocktime}
