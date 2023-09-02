@@ -1,10 +1,17 @@
-from abc import ABC, abstractmethod
-from decodex.type import TaggedAddr
-from typing import Union, Sequence, Generator, Dict, Any, Literal
 import json
 import os
-from decodex.constant import DECODEX_DIR
+from abc import ABC
+from abc import abstractmethod
 from pathlib import Path
+from typing import Any
+from typing import Dict
+from typing import Generator
+from typing import Literal
+from typing import Sequence
+from typing import Union
+
+from decodex.constant import DECODEX_DIR
+from decodex.type import TaggedAddr
 
 
 class AddrTagger(ABC):
@@ -80,7 +87,7 @@ class JSONAddrTagger(SyncAddrTagger):
         address: Sequence[str],
     ) -> Generator[TaggedAddr, None, None]:
         for addr in address:
-            tag: Dict[str, Any] = self._addr_tags.get(addr, {})
+            tag: Dict[str, Any] = self._addr_tags.get(addr.lower(), {})
             yield {
                 "address": addr,
                 "name": tag.get("name", ""),
