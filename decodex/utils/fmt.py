@@ -8,12 +8,15 @@ def fmt_blktime(blktime: datetime) -> str:
     return blktime.strftime("%Y-%m-%d %H:%M:%S") + " UTC"
 
 
-def fmt_addr(ta: Dict) -> str:
+def fmt_addr(ta: Dict, truncate: bool = True) -> str:
     addr = ta["address"]
     name = ta["name"]
     labels = ", ".join(l for l in ta["labels"] if l)
 
-    rtn = name if name else trunc_addr(addr)
+    if truncate:
+        rtn = name if name else trunc_addr(addr)
+    else:
+        rtn = f"{addr} ({name})" if name else addr
     if labels:
         rtn += f" [{labels}]"
     return rtn
