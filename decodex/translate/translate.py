@@ -107,11 +107,19 @@ class Translator:
                 byte_sig = Web3.keccak(text=text_sig).hex()
                 self.hdlrs[byte_sig] = decoder
 
+    def translate(self, txhash: str, *, max_workers: int = 10) -> TaggedTx:
+        tx: Tx = self.searcher.get_tx(txhash)
+        return self._process_tx(tx, max_workers=max_workers)
+
+    def simulate(self, from_address: str, to_address: str, value: int, data: str, *, max_workers: int = 10) -> TaggedTx:
+        tx: Tx = self.searcher.simluate_tx(from_address=from_address, to_address=to_address, value=value, data=data)
+        return self._process_tx(tx, max_workers=max_workers)
+
     @classmethod
     def supported_defis(cls) -> List[str]:
         return list(cls.evt_opts.keys())
 
-    def decode_log(self, log: Dict[str, Any]) -> Optional[Action]:
+    def _decode_log(self, log: Dict[str, Any]) -> Optional[Action]:
         topics = log.get("topics", [])
         if len(topics) == 0:
             raise ValueError("Log topics is empty")
@@ -133,13 +141,13 @@ class Translator:
 
     def _process_tx(self, tx: Tx, max_workers: int) -> TaggedTx:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            actions = executor.map(self.decode_log, tx["logs"])
+            actions = executor.map(self._decode_log, tx["logs"])
         actions = [x for x in actions if x is not None]
         blk_time = datetime.fromtimestamp(tx["block_timestamp"], tz=pytz.utc)
         (tx_from, tx_to) = self.tagger([tx["from"], tx["to"]])
-        if len(actions) == 0 and len(tx["input"]) > 0:
+        if len(actions) == 0 and len(tx["input"]) > 0 and tx["input"] != "0x":
             msg = parse_utf8(tx["input"])
-            if msg is not None:
+            if msg:
                 actions = [UTF8Message(tx_from, tx_to, msg)]
         return {
             "txhash": tx["txhash"],
@@ -153,11 +161,3 @@ class Translator:
             "input": tx["input"],
             "status": tx["status"],
         }
-
-    def translate(self, txhash: str, *, max_workers: int = 10) -> TaggedTx:
-        tx: Tx = self.searcher.get_tx(txhash)
-        return self._process_tx(tx, max_workers=max_workers)
-
-    def simulate(self, from_address: str, to_address: str, value: int, data: str, *, max_workers: int = 10) -> TaggedTx:
-        tx: Tx = self.searcher.simluate_tx(from_address=from_address, to_address=to_address, value=value, data=data)
-        return self._process_tx(tx, max_workers=max_workers)

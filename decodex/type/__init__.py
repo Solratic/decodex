@@ -13,6 +13,7 @@ from .action_type import RemoveLiquidityAction
 from .action_type import RepayAction
 from .action_type import SupplyAction
 from .action_type import SwapAction
+from .action_type import TransferAction
 from .action_type import UTF8Message
 from .action_type import WithdrawAction
 from .rpc_type import RawTraceCallResponse
@@ -31,6 +32,7 @@ __all__ = [
     "EventHandleFunc",
     "EventPayload",
     "Action",
+    "TransferAction",
     "UTF8Message",
     "SwapAction",
     "AddLiquidityAction",
@@ -48,4 +50,5 @@ __all__ = [
     "SupplyAction",
     "RpcRequest",
     "RawTraceCallResponse",
+    "TraceCallResponse",
 ]

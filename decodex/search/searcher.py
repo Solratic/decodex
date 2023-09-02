@@ -115,7 +115,10 @@ class Web3Searcher(BaseSearcher):
         gas_price: Union[Wei, Literal["auto"]] = "auto",
         timeout: int = 120,
     ) -> Tx:
-        block = self.web3.eth.get_block("latest")
+        """
+        Simluates a transaction and returns the trace result.
+        """
+        blk = self.web3.eth.get_block("latest")
         if gas == "auto":
             gas = self.web3.eth.estimate_gas(
                 {
@@ -150,7 +153,7 @@ class Web3Searcher(BaseSearcher):
             "txhash": "Simulation result",
             "from": from_address,
             "to": to_address,
-            "block_timestamp": block["timestamp"],
+            "block_timestamp": blk["timestamp"],
             "value": value,
             "gas_used": int(result["gasUsed"], 16),
             "gas_price": gas_price,
