@@ -1,10 +1,13 @@
 import os
 from textwrap import indent
+from typing import Literal
+from typing import Union
 
 import click
 import pyfiglet
 from colorama import Fore
 from colorama import Style
+from tabulate import tabulate
 
 from .constant import DECODEX_DIR
 from .installer import download_and_save_csv
@@ -63,22 +66,20 @@ def download(chain: str):
 @click.option("--from-addr", type=str, help="Address of the sender", default=None)
 @click.option("--to-addr", type=str, help="Address of the receiver", default=None)
 @click.option("--value", type=float, help="Value in ether", default=None)
-@click.option("--input-data", type=str, help="Input data of the transaction", default=None)
-@click.option(
-    "--chain",
-    "-c",
-    type=click.Choice(["ethereum"]),
-    default="ethereum",
-    help="Chain to use for decoding",
-)
-@click.option(
-    "--provider-uri",
-    "-p",
-    type=str,
-    default=os.getenv("WEB3_PROVIDER_URI", "http://localhost:8545"),
-    help="Ethereum provider URI for transaction decoding",
-)
-def explain(txhash: str, from_addr: str, to_addr: str, value: int, input_data: str, chain: str, provider_uri: str):
+@click.option("--input-data", type=str, help="Input data of the transaction", default="latest")
+@click.option("--block", type=str, help="Block number of the transaction", default="latest")
+@click.option("--chain", "-c", type=click.Choice(["ethereum"]), default="ethereum", help="Chain to use for decoding")
+@click.option("--provider-uri", "-p", type=str, default=os.getenv("WEB3_PROVIDER_URI", "http://localhost:8545"))
+def explain(
+    txhash: str,
+    from_addr: str,
+    to_addr: str,
+    value: int,
+    input_data: str,
+    block: Union[Literal["latest"], int],
+    chain: str,
+    provider_uri: str,
+):
     translator = Translator(provider_uri=provider_uri, chain=chain, verbose=True)
     if txhash is None:
         # If txhash is not provided, then from_addr, to_addr, value, input_data must be provided to simulate a transaction
@@ -90,7 +91,14 @@ def explain(txhash: str, from_addr: str, to_addr: str, value: int, input_data: s
         ), "from_addr, to_addr, input_data must be hex string"
         assert value >= 0, "value must be non-negative"
         value = int(value * 1e18)
-        tagged_tx = translator.simulate(from_address=from_addr, to_address=to_addr, value=value, input_data=input_data)
+        block = int(block) if block != "latest" else block
+        tagged_tx = translator.simulate(
+            from_address=from_addr,
+            to_address=to_addr,
+            value=value,
+            data=input_data,
+            block=block,
+        )
     else:
         # If txhash is provided
         tagged_tx = translator.translate(txhash=txhash)
@@ -134,12 +142,23 @@ Status: {status}
         actions=indented_actions,
     )
 
+    for acc in tagged_tx["balance_change"]:
+        render += "\n"
+        render += fmt_addr(acc["address"], truncate=False)
+        render += "\n"
+        table_data = []
+        for asset in acc["assets"]:
+            table_data.append(
+                [fmt_addr(asset["asset"]), asset["balance_before"], asset["balance_change"], asset["balance_after"]]
+            )
+
+        render += tabulate(
+            table_data, headers=["Asset", "Balance Before", "Balance Change", "Balance After"], tablefmt="grid"
+        )
+
     indented_render = indent(render, "  ")  # Indent entire tmpl by 2 spaces
     print(indented_render)
 
 
 if __name__ == "__main__":
     cli()
-
-
-# https://raw.githubusercontent.com/brianleect/etherscan-labels/main/data/etherscan/combined/combinedAllLabels.json
