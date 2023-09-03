@@ -71,9 +71,9 @@ TaggedTx = TypedDict(
         "to": TaggedAddr,  # to address, hex string. 0x prefixed.
         "block_number": int,  # block number of the transaction
         "block_time": datetime,  # datetime of the block
-        "value": int,  # value of the transaction, in Ether.
+        "value": float,  # value of the transaction, in Ether.
         "gas_used": int,  # gas used by the transaction, in Gwei.
-        "gas_price": int,  # gas price of the transaction, in Gwei.
+        "gas_price": float,  # gas price of the transaction, in Gwei.
         "input": str,  # input data of the transaction, hex string. 0x prefixed.
         "status": int,  # status of the transaction
         "reason": str,  # reason of the transaction if failed
