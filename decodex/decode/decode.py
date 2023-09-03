@@ -5,7 +5,6 @@ from typing import List
 from typing import Tuple
 
 from eth_abi.abi import decode_abi
-from eth_abi.abi import decode_single
 
 
 def eth_decode_input(abi: Dict, data: str) -> Tuple[str, Dict]:
