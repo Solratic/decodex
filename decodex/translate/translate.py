@@ -121,8 +121,8 @@ class Translator:
         timeout: int = 120,
         max_workers: int = 10,
     ) -> TaggedTx:
-        from_address = Web3.toChecksumAddress(from_address.lower())
-        to_address = Web3.toChecksumAddress(to_address.lower())
+        from_address = Web3.to_checksum_address(from_address.lower())
+        to_address = Web3.to_checksum_address(to_address.lower())
         simulated_tx = self.searcher.simluate_tx(
             from_address=from_address,
             to_address=to_address,
@@ -277,9 +277,7 @@ class Translator:
     def _process_transfer(
         self,
         actions: List[TransferAction],
-        eth_balance_changes: Dict[str, Dict[Literal["ETH"], int]],
-        blk_num: int,
-        max_workers: int,
+        eth_balance_changes: Dict[str, Dict[Literal["ETH", "Gas Fee"], int]],
     ) -> List[AccountBalanceChanged]:
         tagged_mapping: Dict[str, TaggedAddr] = {}
         addr_token_pairs = set()
@@ -296,19 +294,14 @@ class Translator:
             addr_token_pairs.add((sender, token))
             addr_token_pairs.add((receiver, token))
 
-        initial_balances = self._get_erc20_balabce(addr_token_pairs, blk_num)
-
         balance_changed: Dict[str, Dict[str, AssetBalanceChanged]] = {}
         for account, token in addr_token_pairs:
             if account not in balance_changed:
                 balance_changed[account] = {}
 
-            initial_balance = initial_balances.get(str((account, token)), 0.0)
             balance_changed[account][token] = {
                 "asset": tagged_mapping[token],
-                "balance_before": initial_balance,
                 "balance_change": 0.0,
-                "balance_after": 0.0,
             }
 
         for action in actions:
@@ -320,16 +313,6 @@ class Translator:
             balance_changed[sender][token]["balance_change"] -= amount
             balance_changed[receiver][token]["balance_change"] += amount
 
-        for account, tokens in balance_changed.items():
-            for token, changes in tokens.items():
-                changes["balance_after"] = changes["balance_before"] + changes["balance_change"]
-
-        # Put ETH balance changes into balance_changed
-        eth_initial_balance = self._get_eth_balance(
-            addrs=eth_balance_changes.keys(),
-            blk_num=blk_num,
-            max_workers=max_workers,
-        )
         extra_account = set([e.lower() for e in eth_balance_changes.keys()]) - set(tagged_mapping.keys())
         eth_tagged_mapping = zip(extra_account, self.tagger(extra_account))
         tagged_mapping.update(eth_tagged_mapping)
@@ -339,19 +322,25 @@ class Translator:
             if balance_changed.get(account) is None:
                 balance_changed[account] = {}
 
-            balance_changed[account]["ETH"] = {
-                "asset": {"address": "ETH", "name": "", "labels": []},
-                "balance_before": Web3.fromWei(eth_initial_balance[account], "ether"),
-                "balance_change": changes["ETH"]
-                / 10**18,  # Since balance change may be negative, we need to divide by 10**18
-                "balance_after": Web3.fromWei(eth_initial_balance[account] + changes["ETH"], "ether"),
-            }
+            if changes.get("ETH", 0):
+                balance_changed[account]["ETH"] = {
+                    "asset": {"address": "ETH", "name": "Platform", "labels": []},
+                    "balance_change": changes["ETH"] / 10**18,
+                }
 
-        account_balance_changed_list: List[AccountBalanceChanged] = []
-        for account, assets_dict in balance_changed.items():
-            tagged_account = tagged_mapping[account]
-            asset_list = list(assets_dict.values())
-            account_balance_changed_list.append({"address": tagged_account, "assets": asset_list})
+            if changes.get("Gas Fee", 0):
+                balance_changed[account]["Gas Fee"] = {
+                    "asset": {"address": "Gas Fee", "name": "Platform", "labels": []},
+                    "balance_change": changes["Gas Fee"] / 10**18,
+                }
+
+        account_balance_changed_list: List[AccountBalanceChanged] = [
+            {
+                "address": tagged_mapping[account],
+                "assets": [asset for asset in assets_dict.values() if asset["balance_change"] != 0],
+            }
+            for account, assets_dict in balance_changed.items()
+        ]
 
         return account_balance_changed_list
 
@@ -373,8 +362,6 @@ class Translator:
         bal_changed = self._process_transfer(
             actions=transfers,
             eth_balance_changes=tx["eth_balance_changes"],
-            blk_num=tx["block_number"],
-            max_workers=max_workers,
         )
 
         # Get the time of the block

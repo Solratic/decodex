@@ -11,4 +11,4 @@ class RPCException(Exception):
         self.code = code
 
     def __str__(self):
-        return f"RPC request error with code {self.code}: {self.args[0]}"
+        return f"RPC request error with code {self.code} [{self.args[0]}]"

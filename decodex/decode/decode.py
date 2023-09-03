@@ -4,7 +4,7 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
-from eth_abi.abi import decode_abi
+from eth_abi import decode as decode_abi
 
 
 def eth_decode_input(abi: Dict, data: str) -> Tuple[str, Dict]:

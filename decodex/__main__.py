@@ -169,15 +169,12 @@ Balance Changes
             table_data.append(
                 [
                     fmt_addr(asset["asset"], truncate=False),
-                    asset["balance_before"],
                     asset["balance_change"],
-                    asset["balance_after"],
                 ]
             )
 
-        render += tabulate(
-            table_data, headers=["Asset", "Balance Before", "Balance Change", "Balance After"], tablefmt="grid"
-        )
+        render += tabulate(table_data, headers=["Asset", "Balance Change"], tablefmt="grid")
+        render += "\n"
 
     indented_render = indent(render, "  ")  # Indent entire tmpl by 2 spaces
     print(indented_render)

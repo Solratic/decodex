@@ -28,9 +28,7 @@ AssetBalanceChanged = TypedDict(
     "BalanceChange",
     {
         "asset": TaggedAddr,  # address of the asset
-        "balance_before": float,  # balance before the transaction
         "balance_change": float,  # balance change of the asset
-        "balance_after": float,  # balance after the transaction
     },
 )
 
@@ -59,7 +57,7 @@ Tx = TypedDict(
         "status": int,  # status of the transaction
         "reason": str,  # reason of the transaction if failed
         "logs": List[Log],  # logs of the transaction
-        "eth_balance_changes": Dict[str, Dict[Literal["ETH"], int]],  # ETH balance change of the transaction
+        "eth_balance_changes": Dict[str, Dict[Literal["ETH", "Gas Fee"], int]],  # ETH balance change of the transaction
     },
     total=False,
 )

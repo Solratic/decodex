@@ -98,7 +98,7 @@ class Web3Searcher(BaseSearcher):
             {
                 "address": log["address"],
                 "topics": [t.hex() for t in log["topics"]],
-                "data": log["data"],
+                "data": log["data"].hex(),
             }
             for log in tx_receipt["logs"]
         ]
@@ -124,11 +124,7 @@ class Web3Searcher(BaseSearcher):
         gas_price = tx["gasPrice"]
         value = tx["value"]
 
-        gas_fee = gas_used * gas_price
-        if gas_fee + value > 0:
-            eth_balance_changes = {from_addr: {"ETH": -(gas_used * gas_price) - value}}
-        else:
-            eth_balance_changes = {}
+        eth_balance_changes = {from_addr: {"ETH": -value, "Gas Fee": -gas_used * gas_price}}
 
         return {
             "txhash": tx_receipt["transactionHash"].hex(),
@@ -139,7 +135,7 @@ class Web3Searcher(BaseSearcher):
             "value": value,
             "gas_used": gas_used,
             "gas_price": gas_price,
-            "input": tx["input"],
+            "input": tx["input"].hex(),
             "status": status,
             "reason": reason,
             "logs": logs,
@@ -228,7 +224,7 @@ class Web3Searcher(BaseSearcher):
             raise RPCException(resp["error"]["code"], resp["error"]["message"])
 
         logs, account_balance = self._parse_calls(resp["result"])
-        eth_balance_changes = {addr: {"ETH": wei} for addr, wei in account_balance.items()}
+        eth_balance_changes = {addr: {"ETH": wei, "Gas Fee": 0} for addr, wei in account_balance.items()}
 
         result = resp.get("result", {})
         tx: Tx = {
