@@ -86,7 +86,7 @@ class Web3Searcher(BaseSearcher):
         else:
             raise TypeError("provider must be a Web3 http provider URI")
 
-    def get_tx(self, txhash: str, max_workers: int = 2) -> Tx:
+    def get_tx(self, txhash: str, *, max_workers: int = 2, show_revert_reason: bool = True) -> Tx:
         assert max_workers > 0, "max_workers must be positive"
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             tx = executor.submit(self.web3.eth.get_transaction, txhash)
@@ -105,7 +105,7 @@ class Web3Searcher(BaseSearcher):
 
         status = tx_receipt["status"]
         reason = ""
-        if status == 0:
+        if status == 0 and show_revert_reason:
             try:
                 self.web3.eth.call(
                     {
@@ -119,19 +119,31 @@ class Web3Searcher(BaseSearcher):
             except Exception as e:
                 reason = str(e)
 
+        from_addr = tx["from"]
+        gas_used = tx_receipt["gasUsed"]
+        gas_price = tx["gasPrice"]
+        value = tx["value"]
+
+        gas_fee = gas_used * gas_price
+        if gas_fee + value > 0:
+            eth_balance_changes = {from_addr: {"ETH": -(gas_used * gas_price) - value}}
+        else:
+            eth_balance_changes = {}
+
         return {
             "txhash": tx_receipt["transactionHash"].hex(),
-            "from": tx["from"],
+            "from": from_addr,
             "to": tx["to"],
             "block_number": tx_receipt["blockNumber"],
             "block_timestamp": blk["timestamp"],
-            "value": tx["value"],
-            "gas_used": tx_receipt["gasUsed"],
-            "gas_price": tx["gasPrice"],
+            "value": value,
+            "gas_used": gas_used,
+            "gas_price": gas_price,
             "input": tx["input"],
             "status": status,
             "reason": reason,
             "logs": logs,
+            "eth_balance_changes": eth_balance_changes,
         }
 
     def _parse_calls(self, result: RawTraceCallResult) -> Tuple[List[Log], Dict[str, int]]:

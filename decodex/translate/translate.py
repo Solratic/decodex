@@ -106,7 +106,7 @@ class Translator:
 
     def translate(self, txhash: str, *, max_workers: int = 10) -> TaggedTx:
         tx: Tx = self.searcher.get_tx(txhash)
-        return self._process_tx(tx, max_workers=max_workers, show_balance=False)
+        return self._process_tx(tx, max_workers=max_workers)
 
     def simulate(
         self,
@@ -133,7 +133,7 @@ class Translator:
             gas_price=gas_price,
             timeout=timeout,
         )
-        return self._process_tx(simulated_tx, max_workers=max_workers, show_balance=True)
+        return self._process_tx(simulated_tx, max_workers=max_workers)
 
     @classmethod
     def supported_defis(cls) -> List[str]:
@@ -249,15 +249,30 @@ class Translator:
     def _get_eth_balance(
         self,
         addrs: Iterable[str],
-        blk_num: int,
+        blk_num: Union[int, Literal["latest"]],
         max_workers: int,
     ) -> Dict[str, int]:
+        """
+        Parameters
+        ----------
+        addrs : Iterable[str]
+            List of addresses, the address must be in checksum format
+        blk_num : int
+            Block number
+
+        Returns
+        -------
+        Dict[str, int]
+            A dict of address -> balance
+            the return address (key) is in lowercase format
+        """
+
         def proxy(addr: str) -> int:
             return self.web3.eth.get_balance(addr, block_identifier=blk_num)
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             balances = executor.map(proxy, addrs)
-        return dict(zip(addrs, balances))
+        return dict(zip([addr.lower() for addr in addrs], balances))
 
     def _process_transfer(
         self,
@@ -315,14 +330,20 @@ class Translator:
             blk_num=blk_num,
             max_workers=max_workers,
         )
-        extra_account = set(eth_balance_changes.keys()) - set(tagged_mapping.keys())
+        extra_account = set([e.lower() for e in eth_balance_changes.keys()]) - set(tagged_mapping.keys())
         eth_tagged_mapping = zip(extra_account, self.tagger(extra_account))
         tagged_mapping.update(eth_tagged_mapping)
         for account, changes in eth_balance_changes.items():
+            account = account.lower()
+
+            if balance_changed.get(account) is None:
+                balance_changed[account] = {}
+
             balance_changed[account]["ETH"] = {
-                "asset": {"address": "ETH", "name": "", "label": []},
+                "asset": {"address": "ETH", "name": "", "labels": []},
                 "balance_before": Web3.fromWei(eth_initial_balance[account], "ether"),
-                "balance_change": Web3.fromWei(changes["ETH"], "ether"),
+                "balance_change": changes["ETH"]
+                / 10**18,  # Since balance change may be negative, we need to divide by 10**18
                 "balance_after": Web3.fromWei(eth_initial_balance[account] + changes["ETH"], "ether"),
             }
 
@@ -330,12 +351,11 @@ class Translator:
         for account, assets_dict in balance_changed.items():
             tagged_account = tagged_mapping[account]
             asset_list = list(assets_dict.values())
-            asset_list.sort(key=lambda x: x["balance_change"], reverse=True)
             account_balance_changed_list.append({"address": tagged_account, "assets": asset_list})
 
         return account_balance_changed_list
 
-    def _process_tx(self, tx: Tx, max_workers: int, show_balance: bool) -> TaggedTx:
+    def _process_tx(self, tx: Tx, max_workers: int) -> TaggedTx:
         # Decode the events
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             actions = executor.map(self._decode_log, tx["logs"])
@@ -349,15 +369,13 @@ class Translator:
                 transfers.append(action)
             else:
                 others.append(action)
-        if show_balance:
-            bal_changed = self._process_transfer(
-                actions=transfers,
-                eth_balance_changes=tx["eth_balance_changes"],
-                blk_num=tx["block_number"],
-                max_workers=max_workers,
-            )
-        else:
-            bal_changed = []
+
+        bal_changed = self._process_transfer(
+            actions=transfers,
+            eth_balance_changes=tx["eth_balance_changes"],
+            blk_num=tx["block_number"],
+            max_workers=max_workers,
+        )
 
         # Get the time of the block
         blk_time = datetime.fromtimestamp(tx["block_timestamp"], tz=pytz.utc)

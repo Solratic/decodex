@@ -162,12 +162,17 @@ Balance Changes
 
     for acc in tagged_tx["balance_change"]:
         render += "\n"
-        render += fmt_addr(acc["address"], truncate=False)
+        render += "Account: " + fmt_addr(acc["address"], truncate=False)
         render += "\n"
         table_data = []
         for asset in acc["assets"]:
             table_data.append(
-                [fmt_addr(asset["asset"]), asset["balance_before"], asset["balance_change"], asset["balance_after"]]
+                [
+                    fmt_addr(asset["asset"], truncate=False),
+                    asset["balance_before"],
+                    asset["balance_change"],
+                    asset["balance_after"],
+                ]
             )
 
         render += tabulate(

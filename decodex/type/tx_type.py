@@ -20,7 +20,7 @@ TaggedAddr = TypedDict(
     {
         "address": str,  # address or ens name
         "name": str,  # name of the contract (e.g., USD Coin (USDC))
-        "label": List[str],  # label of the address (e.g., ["centre", "stablecoin"])
+        "labels": List[str],  # label of the address (e.g., ["centre", "stablecoin"])
     },
 )
 
@@ -81,7 +81,7 @@ TaggedTx = TypedDict(
         "reason": str,  # reason of the transaction if failed
         "method": str,  # calling method of the transaction
         "actions": List[str],  # actions of the transaction
-        "balance_change": AccountBalanceChanged,  # balance change of the transaction
+        "balance_change": List[AccountBalanceChanged],  # balance change of the transaction
     },
     total=False,
 )
