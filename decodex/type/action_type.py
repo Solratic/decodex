@@ -24,6 +24,8 @@ class UTF8Message(Action):
     Represents a UTF8 message send from one address to another.
     """
 
+    action: str = "utf8_message"
+
     sender: TaggedAddr
     receiver: TaggedAddr
     message: str
@@ -37,6 +39,8 @@ class TransferAction(Action):
     """
     Represents a transfer of tokens from one address to another.
     """
+
+    action: str = "transfer"
 
     sender: TaggedAddr
     receiver: TaggedAddr
@@ -52,6 +56,8 @@ class SwapAction(Action):
     """
     Represents a swap action between two tokens.
     """
+
+    action: str = "swap"
 
     pool: TaggedAddr
     pay_token: TaggedAddr
@@ -76,6 +82,8 @@ class AddLiquidityAction(Action):
     Represents an action to add liquidity to a pool.
     """
 
+    action: str = "add_liquidity"
+
     pool: TaggedAddr
     token_0: TaggedAddr
     token_1: TaggedAddr
@@ -99,6 +107,8 @@ class RemoveLiquidityAction(Action):
     Represents an action to remove liquidity from a pool.
     """
 
+    action: str = "remove_liquidity"
+
     pool: TaggedAddr
     token_0: TaggedAddr
     token_1: TaggedAddr
@@ -121,6 +131,8 @@ class PoolCreatedAction(Action):
     """
     Represents an action to create a pair.
     """
+
+    action: str = "pool_created"
 
     token_0: TaggedAddr
     token_1: TaggedAddr
@@ -147,6 +159,8 @@ class CollectAction(Action):
     Represents an action to collect tokens from a pool.
     """
 
+    action: str = "collect"
+
     pool: TaggedAddr
     token_0: TaggedAddr
     token_1: TaggedAddr
@@ -170,6 +184,8 @@ class OwnerChangedAction(Action):
     Represents an action to change the owner of a pool.
     """
 
+    action: str = "owner_changed"
+
     pool: TaggedAddr
     new_owner: TaggedAddr
     old_owner: TaggedAddr
@@ -188,6 +204,8 @@ class BorrowAction(Action):
     """
     Represents an action to borrow tokens from a lending pool.
     """
+
+    action: str = "borrow"
 
     pool: TaggedAddr
     token: TaggedAddr
@@ -208,6 +226,8 @@ class RepayAction(Action):
     Represents an action to repay tokens to a lending pool.
     """
 
+    action: str = "repay"
+
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
@@ -227,6 +247,8 @@ class DepositAction(Action):
     Deposit tokens to a lending pool.
     """
 
+    action: str = "deposit"
+
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
@@ -245,6 +267,8 @@ class WithdrawAction(Action):
     """
     Withdraw tokens from a lending pool.
     """
+
+    action: str = "withdraw"
 
     pool: TaggedAddr
     token: TaggedAddr
@@ -274,6 +298,8 @@ class FlashloanAction(Action):
     Represents an action to flashloan tokens from a lending pool.
     """
 
+    action: str = "flashloan"
+
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
@@ -293,6 +319,8 @@ class EnableCollateralAction(Action):
     Enable a token as collateral in a lending pool.
     """
 
+    action: str = "enable_collateral"
+
     pool: TaggedAddr
     token: TaggedAddr
 
@@ -310,6 +338,8 @@ class DisableCollateralAction(Action):
     Disable a token as collateral in a lending pool.
     """
 
+    action: str = "disable_collateral"
+
     pool: TaggedAddr
     token: TaggedAddr
 
@@ -326,6 +356,8 @@ class SupplyAction(Action):
     """
     Supply tokens to a lending pool.
     """
+
+    action: str = "supply"
 
     pool: TaggedAddr
     token: TaggedAddr
