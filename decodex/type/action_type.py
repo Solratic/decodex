@@ -24,11 +24,11 @@ class UTF8Message(Action):
     Represents a UTF8 message send from one address to another.
     """
 
-    action: str = "utf8_message"
-
     sender: TaggedAddr
     receiver: TaggedAddr
     message: str
+
+    action: str = "utf8_message"
 
     def __repr__(self):
         return f"{fmt_addr(self.sender)} sent message to {fmt_addr(self.receiver)}: {self.message}"
@@ -40,12 +40,12 @@ class TransferAction(Action):
     Represents a transfer of tokens from one address to another.
     """
 
-    action: str = "transfer"
-
     sender: TaggedAddr
     receiver: TaggedAddr
     token: TaggedAddr
     amount: float
+
+    action: str = "transfer"
 
     def __repr__(self):
         return f"{fmt_addr(self.sender)} transferred {self.amount} {fmt_addr(self.token)} to {fmt_addr(self.receiver)}"
@@ -57,13 +57,13 @@ class SwapAction(Action):
     Represents a swap action between two tokens.
     """
 
-    action: str = "swap"
-
     pool: TaggedAddr
     pay_token: TaggedAddr
     recv_token: TaggedAddr
     pay_amount: float
     recv_amount: float
+
+    action: str = "swap"
 
     def __repr__(self) -> str:
         tmpl = "Swap {pay_amount} {pay_token} for {recv_amount} {recv_token} on {pool}"
@@ -82,13 +82,13 @@ class AddLiquidityAction(Action):
     Represents an action to add liquidity to a pool.
     """
 
-    action: str = "add_liquidity"
-
     pool: TaggedAddr
     token_0: TaggedAddr
     token_1: TaggedAddr
     amount_0: float
     amount_1: float
+
+    action: str = "add_liquidity"
 
     def __repr__(self) -> str:
         tmpl = "Add {amount_0} {token_0} and {amount_1} {token_1} liquidity to {pool}"
@@ -107,13 +107,13 @@ class RemoveLiquidityAction(Action):
     Represents an action to remove liquidity from a pool.
     """
 
-    action: str = "remove_liquidity"
-
     pool: TaggedAddr
     token_0: TaggedAddr
     token_1: TaggedAddr
     amount_0: float
     amount_1: float
+
+    action: str = "remove_liquidity"
 
     def __repr__(self) -> str:
         tmpl = "Remove {amount_0} {token_0} and {amount_1} {token_1} liquidity from {pool}"
@@ -132,11 +132,11 @@ class PoolCreatedAction(Action):
     Represents an action to create a pair.
     """
 
-    action: str = "pool_created"
-
     token_0: TaggedAddr
     token_1: TaggedAddr
     fee: float = None
+
+    action: str = "pool_created"
 
     def __repr__(self) -> str:
         tmpl = "Create {token_0} / {token_1} pool"
@@ -159,13 +159,13 @@ class CollectAction(Action):
     Represents an action to collect tokens from a pool.
     """
 
-    action: str = "collect"
-
     pool: TaggedAddr
     token_0: TaggedAddr
     token_1: TaggedAddr
     amount_0: float
     amount_1: float
+
+    action: str = "collect"
 
     def __repr__(self) -> str:
         tmpl = "Collect {amount_0} {token_0} and {amount_1} {token_1} from {pool}"
@@ -184,11 +184,11 @@ class OwnerChangedAction(Action):
     Represents an action to change the owner of a pool.
     """
 
-    action: str = "owner_changed"
-
     pool: TaggedAddr
     new_owner: TaggedAddr
     old_owner: TaggedAddr
+
+    action: str = "owner_changed"
 
     def __repr__(self) -> str:
         tmpl = "Change owner of {pool} from {old_owner} to {new_owner}"
@@ -205,11 +205,11 @@ class BorrowAction(Action):
     Represents an action to borrow tokens from a lending pool.
     """
 
-    action: str = "borrow"
-
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
+
+    action: str = "borrow"
 
     def __repr__(self) -> str:
         tmpl = "Borrow {amount} {token} from {pool}"
@@ -226,11 +226,11 @@ class RepayAction(Action):
     Represents an action to repay tokens to a lending pool.
     """
 
-    action: str = "repay"
-
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
+
+    action: str = "repay"
 
     def __repr__(self) -> str:
         tmpl = "Repay {amount} {token} to {pool}"
@@ -247,11 +247,11 @@ class DepositAction(Action):
     Deposit tokens to a lending pool.
     """
 
-    action: str = "deposit"
-
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
+
+    action: str = "deposit"
 
     def __repr__(self) -> str:
         tmpl = "Deposit {amount} {token} to {pool}"
@@ -268,12 +268,12 @@ class WithdrawAction(Action):
     Withdraw tokens from a lending pool.
     """
 
-    action: str = "withdraw"
-
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
     receiver: TaggedAddr = None
+
+    action: str = "withdraw"
 
     def __repr__(self) -> str:
         if not self.receiver:
@@ -298,11 +298,11 @@ class FlashloanAction(Action):
     Represents an action to flashloan tokens from a lending pool.
     """
 
-    action: str = "flashloan"
-
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
+
+    action: str = "flashloan"
 
     def __repr__(self) -> str:
         tmpl = "Flashloan {amount} {token} from {pool}"
@@ -319,10 +319,10 @@ class EnableCollateralAction(Action):
     Enable a token as collateral in a lending pool.
     """
 
-    action: str = "enable_collateral"
-
     pool: TaggedAddr
     token: TaggedAddr
+
+    action: str = "enable_collateral"
 
     def __repr__(self) -> str:
         tmpl = "Enable {token} as collateral in {pool}"
@@ -338,10 +338,10 @@ class DisableCollateralAction(Action):
     Disable a token as collateral in a lending pool.
     """
 
-    action: str = "disable_collateral"
-
     pool: TaggedAddr
     token: TaggedAddr
+
+    action: str = "disable_collateral"
 
     def __repr__(self) -> str:
         tmpl = "Disable {token} as collateral in {pool}"
@@ -357,11 +357,11 @@ class SupplyAction(Action):
     Supply tokens to a lending pool.
     """
 
-    action: str = "supply"
-
     pool: TaggedAddr
     token: TaggedAddr
     amount: float
+
+    action: str = "supply"
 
     def __repr__(self) -> str:
         tmpl = "Supply {amount} {token} to {pool}"
