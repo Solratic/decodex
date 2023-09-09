@@ -3,6 +3,7 @@ name = "decodex"
 version = "0.4.2"
 description = "Python package to decode dex actions"
 authors = ["alan890104 <alan890104@gmail.com>"]
+exclude = ["tests/**"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
