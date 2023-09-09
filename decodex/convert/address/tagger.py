@@ -103,11 +103,6 @@ class BatchAddrTagger(AddrTagger):
         raise NotImplementedError
 
 
-class SQLAddrTagger(BatchAddrTagger):
-    def lazy_tag(self, address: Sequence[str]) -> Generator[TaggedAddr, None, None]:
-        raise NotImplementedError
-
-
 class TaggerFactory:
     @staticmethod
     def create(
@@ -117,7 +112,5 @@ class TaggerFactory:
     ) -> AddrTagger:
         if tagger_type == "json":
             return JSONAddrTagger(path=uri, chain=chain)
-        elif tagger_type == "sql":
-            raise NotImplementedError
         else:
             raise ValueError(f"Unknown tagger type: {tagger_type}")
