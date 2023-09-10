@@ -3,7 +3,9 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Literal
+from typing import Optional
 from typing import TypedDict
+
 
 Log = TypedDict(
     "Log",
@@ -47,7 +49,8 @@ Tx = TypedDict(
     {
         "txhash": str,  # transaction hash, hex string. 0x prefixed.
         "from": str,  # from address, hex string. 0x prefixed.
-        "to": str,  # to address, hex string. 0x prefixed.
+        "to": Optional[str],  # to address, hex string. 0x prefixed.
+        "contract_created": Optional[TaggedAddr],  # contract created by the transaction, hex string. 0x prefixed.
         "block_number": int,  # block number of the transaction
         "block_timestamp": int,  # timestamp of the block, in seconds.
         "value": int,  # value of the transaction, in wei.
@@ -68,7 +71,8 @@ TaggedTx = TypedDict(
     {
         "txhash": str,  # transaction hash, hex string. 0x prefixed.
         "from": TaggedAddr,  # from address, hex string. 0x prefixed.
-        "to": TaggedAddr,  # to address, hex string. 0x prefixed.
+        "to": Optional[TaggedAddr],  # to address, hex string. 0x prefixed.
+        "contract_created": Optional[TaggedAddr],  # contract created by the transaction, hex string. 0x prefixed.
         "block_number": int,  # block number of the transaction
         "block_time": datetime,  # datetime of the block
         "value": float,  # value of the transaction, in Ether.

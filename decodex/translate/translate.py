@@ -368,7 +368,9 @@ class Translator:
         blk_time = datetime.fromtimestamp(tx["block_timestamp"], tz=pytz.utc)
 
         # Tag the addresses
-        (tx_from, tx_to) = self.tagger([tx["from"], tx["to"]])
+        tx_from = self.tagger(tx["from"])[0]
+        tx_to = self.tagger(tx["to"])[0] if tx["to"] else None
+        tx_contract_created = self.tagger(tx["contract_created"])[0] if tx["contract_created"] else None
 
         # Get the method
         method = self._decode_input(tx["input"])
@@ -389,6 +391,7 @@ class Translator:
             "txhash": tx["txhash"],
             "from": tx_from,
             "to": tx_to,
+            "contract_created": tx_contract_created,
             "block_number": tx["block_number"],
             "block_time": blk_time,
             "value": parse_ether(tx["value"]),

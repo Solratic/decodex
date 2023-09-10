@@ -2,6 +2,7 @@ import json
 import os
 from typing import Callable
 from typing import Dict
+from typing import Generator
 from typing import Literal
 from typing import Tuple
 
@@ -14,7 +15,7 @@ class SignatureLookUp:
     def __init__(self) -> None:
         pass
 
-    def __call__(self, byte_sign: str) -> Tuple[Tuple[str, str]]:
+    def __call__(self, byte_sign: str) -> Generator[Tuple[str, str], None, None]:
         """
         Search for the signature in the database and return the corresponding abi and text_signature.
 
@@ -53,7 +54,7 @@ class CSVSignatureLookUp(SignatureLookUp):
                 f"Signature lookup file is not valid, expected columns: {', '.join(expected_cols)}, but got: {', '.join(cols)}"
             )
 
-    def __call__(self, byte_sign: str) -> Tuple[Tuple[str, str]]:
+    def __call__(self, byte_sign: str) -> Generator[Tuple[str, str], None, None]:
         rows = self.df[self.df["byte_sign"] == byte_sign]
         if rows.empty:
             return {}, ""
@@ -62,7 +63,8 @@ class CSVSignatureLookUp(SignatureLookUp):
         rows = rows.sort_values(by="score", ascending=False)
 
         # Return all rows
-        return tuple(zip(rows["abi"], rows["text_sign"]))
+        for _, row in rows.iterrows():
+            yield row["abi"], row["text_sign"]
 
 
 class SignatureFactory:
