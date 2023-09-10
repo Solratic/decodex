@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict
+from typing import Optional
 
 from .utils import trunc_addr
 
