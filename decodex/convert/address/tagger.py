@@ -7,6 +7,7 @@ from typing import Any
 from typing import Dict
 from typing import Generator
 from typing import Literal
+from typing import Optional
 from typing import Sequence
 from typing import Union
 
@@ -16,20 +17,18 @@ from decodex.type import TaggedAddr
 
 class AddrTagger(ABC):
     @abstractmethod
-    def lazy_tag(self, address: Sequence[str]) -> Generator[TaggedAddr, None, None]:
+    def lazy_tag(self, address: Sequence[Optional[str]]) -> Generator[TaggedAddr, None, None]:
         """
         Tag addresses.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def __call__(self, address: Union[Sequence[str], str]) -> Sequence[TaggedAddr]:
+    def __call__(self, address: Union[Sequence[Optional[str]], Optional[str]]) -> Sequence[Optional[TaggedAddr]]:
         """
         Tag one or more addresses.
         """
-        if isinstance(address, str):
-            address = [address]
-        return list(self.lazy_tag(address))
+        raise NotImplementedError
 
 
 class SyncAddrTagger(AddrTagger):
@@ -37,7 +36,9 @@ class SyncAddrTagger(AddrTagger):
     Tag addresses synchronously, one by one.
     """
 
-    def __call__(self, address: Union[Sequence[str], str]) -> Sequence[TaggedAddr]:
+    def __call__(self, address: Union[Sequence[Optional[str]], Optional[str]]) -> Sequence[Optional[TaggedAddr]]:
+        if address is None:
+            return [None]
         if isinstance(address, str):
             address = [address]
         return list(self.lazy_tag(address))
@@ -84,9 +85,12 @@ class JSONAddrTagger(SyncAddrTagger):
 
     def lazy_tag(
         self,
-        address: Sequence[str],
-    ) -> Generator[TaggedAddr, None, None]:
+        address: Sequence[Optional[str]],
+    ) -> Generator[Optional[TaggedAddr], None, None]:
         for addr in address:
+            if addr is None:
+                yield None
+                continue
             tag: Dict[str, Any] = self._addr_tags.get(addr.lower(), {})
             yield {
                 "address": addr,
@@ -99,7 +103,7 @@ class BatchAddrTagger(AddrTagger):
     def __init__(self) -> None:
         super().__init__()
 
-    def __call__(self, address: Sequence[str] | str) -> Sequence[TaggedAddr]:
+    def __call__(self, address: Sequence[Optional[str]] | Optional[str]) -> Sequence[TaggedAddr]:
         raise NotImplementedError
 
 
