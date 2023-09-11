@@ -19,6 +19,8 @@ from multicall import Call
 from multicall import Multicall
 from web3 import Web3
 
+from decodex.constant import NULL_ADDRESS_0x0
+from decodex.constant import NULL_ADDRESS_0xF
 from decodex.convert.address import AddrTagger
 from decodex.convert.address import TaggerFactory
 from decodex.convert.signature import SignatureFactory
@@ -324,13 +326,13 @@ class Translator:
 
             if changes.get("ETH", 0):
                 balance_changed[account]["ETH"] = {
-                    "asset": {"address": "ETH", "name": "Platform", "labels": []},
+                    "asset": {"address": NULL_ADDRESS_0x0, "name": "Platform (Ether)", "labels": []},
                     "balance_change": changes["ETH"] / 10**18,
                 }
 
             if changes.get("Gas Fee", 0):
                 balance_changed[account]["Gas Fee"] = {
-                    "asset": {"address": "Gas Fee", "name": "Platform", "labels": []},
+                    "asset": {"address": NULL_ADDRESS_0xF, "name": "Platform (Gas Fee)", "labels": []},
                     "balance_change": changes["Gas Fee"] / 10**18,
                 }
 

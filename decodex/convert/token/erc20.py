@@ -17,7 +17,8 @@ from web3.exceptions import BadFunctionCallOutput
 from web3.exceptions import ContractLogicError
 
 from decodex.constant import DECODEX_DIR
-from decodex.constant import NULL_ADDRESS
+from decodex.constant import NULL_ADDRESS_0x0
+from decodex.constant import NULL_ADDRESS_0xF
 from decodex.type import ERC20Compatible
 
 
@@ -50,10 +51,10 @@ class ERC20TokenService:
         if token is not None:
             return token
 
-        if address == NULL_ADDRESS:
+        if address in {NULL_ADDRESS_0x0, NULL_ADDRESS_0xF}:
             return {
                 "name": "Platform Token",
-                "address": NULL_ADDRESS,
+                "address": address,
                 "contract_name": None,
                 "symbol": "ETH",
                 "decimals": 18,

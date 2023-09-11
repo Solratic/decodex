@@ -111,10 +111,7 @@ def explain(
 Transaction: {{txhash}}
 Blocktime: {{blocktime}}
 From: {{from_addr}}
-To: {{to_addr}}
-{% if contract_created -%}
-Contract Created: {{contract_created}}
-{% endif -%}
+To: {{to_addr}} {% if contract_created %} (Contract Created: {{contract_created}}){% endif %}
 Value: {{value}}
 GasUsed: {{gas_used}}
 Gas Price: {{gas_price}}
