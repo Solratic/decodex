@@ -119,12 +119,18 @@ class Web3Searcher(BaseSearcher):
             except Exception as e:
                 reason = str(e)
 
+        to_addr = tx["to"]
         from_addr = tx["from"]
         gas_used = tx_receipt["gasUsed"]
         gas_price = tx["gasPrice"]
         value = tx["value"]
 
         eth_balance_changes = {from_addr: {"ETH": -value, "Gas Fee": -gas_used * gas_price}}
+
+        # If to_address is an eoa, add the value to the balance change
+        if self.web3.eth.get_code(to_addr).hex() == "0x":
+            eth_balance_changes[to_addr] = {}
+            eth_balance_changes[to_addr]["ETH"] = value
 
         return {
             "txhash": tx_receipt["transactionHash"].hex(),
@@ -225,7 +231,12 @@ class Web3Searcher(BaseSearcher):
             raise RPCException(resp["error"]["code"], resp["error"]["message"])
 
         logs, account_balance = self._parse_calls(resp["result"])
-        eth_balance_changes = {addr: {"ETH": wei, "Gas Fee": 0} for addr, wei in account_balance.items()}
+        eth_balance_changes = {addr: {"ETH": -wei, "Gas Fee": 0} for addr, wei in account_balance.items()}
+
+        # If to_address is an eoa, add the value to the balance change
+        if self.web3.eth.get_code(to_address).hex() == "0x":
+            eth_balance_changes[to_address] = {}
+            eth_balance_changes[to_address]["ETH"] = value
 
         result = resp.get("result", {})
         tx: Tx = {
