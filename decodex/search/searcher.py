@@ -129,7 +129,8 @@ class Web3Searcher(BaseSearcher):
 
         # If to_address is an eoa, add the value to the balance change
         if to_addr and status == 1 and self.web3.eth.get_code(to_addr).hex() == "0x":
-            eth_balance_changes[to_addr] = {}
+            if to_addr not in eth_balance_changes:
+                eth_balance_changes[to_addr] = {}
             eth_balance_changes[to_addr]["ETH"] = value
 
         return {
@@ -231,11 +232,14 @@ class Web3Searcher(BaseSearcher):
             raise RPCException(resp["error"]["code"], resp["error"]["message"])
 
         logs, account_balance = self._parse_calls(resp["result"])
-        eth_balance_changes = {addr: {"ETH": -wei, "Gas Fee": 0} for addr, wei in account_balance.items()}
+        if len(account_balance) == 0:
+            eth_balance_changes = {from_address: {"ETH": -value, "Gas Fee": 0}}
+        else:
+            eth_balance_changes = {addr: {"ETH": wei, "Gas Fee": 0} for addr, wei in account_balance.items()}
 
-        # If to_address is an eoa, add the value to the balance change
-        if self.web3.eth.get_code(to_address).hex() == "0x":
-            eth_balance_changes[to_address] = {}
+        if to_address and self.web3.eth.get_code(to_address).hex() == "0x":
+            if to_address not in eth_balance_changes:
+                eth_balance_changes[to_address] = {}
             eth_balance_changes[to_address]["ETH"] = value
 
         result = resp.get("result", {})
