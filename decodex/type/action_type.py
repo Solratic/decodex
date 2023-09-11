@@ -5,6 +5,7 @@ from typing import Callable
 from typing import Dict
 from typing import Optional
 
+from .tx_type import ERC20Compatible
 from .tx_type import TaggedAddr
 from decodex.utils import fmt_addr
 
@@ -42,7 +43,7 @@ class TransferAction(Action):
 
     sender: TaggedAddr
     receiver: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
     amount: float
 
     action: str = "transfer"
@@ -58,8 +59,8 @@ class SwapAction(Action):
     """
 
     pool: TaggedAddr
-    pay_token: TaggedAddr
-    recv_token: TaggedAddr
+    pay_token: ERC20Compatible
+    recv_token: ERC20Compatible
     pay_amount: float
     recv_amount: float
 
@@ -83,8 +84,8 @@ class AddLiquidityAction(Action):
     """
 
     pool: TaggedAddr
-    token_0: TaggedAddr
-    token_1: TaggedAddr
+    token_0: ERC20Compatible
+    token_1: ERC20Compatible
     amount_0: float
     amount_1: float
 
@@ -108,8 +109,8 @@ class RemoveLiquidityAction(Action):
     """
 
     pool: TaggedAddr
-    token_0: TaggedAddr
-    token_1: TaggedAddr
+    token_0: ERC20Compatible
+    token_1: ERC20Compatible
     amount_0: float
     amount_1: float
 
@@ -132,8 +133,8 @@ class PoolCreatedAction(Action):
     Represents an action to create a pair.
     """
 
-    token_0: TaggedAddr
-    token_1: TaggedAddr
+    token_0: ERC20Compatible
+    token_1: ERC20Compatible
     fee: float = None
 
     action: str = "pool_created"
@@ -160,8 +161,8 @@ class CollectAction(Action):
     """
 
     pool: TaggedAddr
-    token_0: TaggedAddr
-    token_1: TaggedAddr
+    token_0: ERC20Compatible
+    token_1: ERC20Compatible
     amount_0: float
     amount_1: float
 
@@ -206,7 +207,7 @@ class BorrowAction(Action):
     """
 
     pool: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
     amount: float
 
     action: str = "borrow"
@@ -227,7 +228,7 @@ class RepayAction(Action):
     """
 
     pool: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
     amount: float
 
     action: str = "repay"
@@ -248,7 +249,7 @@ class DepositAction(Action):
     """
 
     pool: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
     amount: float
 
     action: str = "deposit"
@@ -269,7 +270,7 @@ class WithdrawAction(Action):
     """
 
     pool: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
     amount: float
     receiver: TaggedAddr = None
 
@@ -299,7 +300,7 @@ class FlashloanAction(Action):
     """
 
     pool: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
     amount: float
 
     action: str = "flashloan"
@@ -320,7 +321,7 @@ class EnableCollateralAction(Action):
     """
 
     pool: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
 
     action: str = "enable_collateral"
 
@@ -339,7 +340,7 @@ class DisableCollateralAction(Action):
     """
 
     pool: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
 
     action: str = "disable_collateral"
 
@@ -358,7 +359,7 @@ class SupplyAction(Action):
     """
 
     pool: TaggedAddr
-    token: TaggedAddr
+    token: ERC20Compatible
     amount: float
 
     action: str = "supply"

@@ -31,10 +31,10 @@ class ERC20Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["address"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
+            token = self._erc20_svc.get_erc20(token_addr)
             params = payload["params"]
-            amount = params["value"] / 10**token_decimals
-            token, sender, receiver = self._tagger([token_addr, params["from"], params["to"]])
+            amount = params["value"] / 10 ** token["decimals"]
+            token, sender, receiver = self._tagger([token, params["from"], params["to"]])
             return TransferAction(
                 sender=sender,
                 receiver=receiver,

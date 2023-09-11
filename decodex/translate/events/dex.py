@@ -8,6 +8,7 @@ from multicall import Multicall
 
 from decodex.convert.address import AddrTagger
 from decodex.convert.signature import SignatureLookUp
+from decodex.convert.token import ERC20TokenService
 from decodex.type import Action
 from decodex.type import AddLiquidityAction
 from decodex.type import CollectAction
@@ -29,15 +30,7 @@ class Events:
     ) -> None:
         self._mc = mc
         self._tagger = tagger
-
-    def _get_token_decimals(self, addrs: Union[List[str], str]) -> List[int]:
-        if isinstance(addrs, str):
-            addrs = [addrs]
-
-        calls = [Call(target=addr, function="decimals()(uint8)") for addr in addrs]
-
-        result = self._mc.agg(calls)
-        return [item["result"] for item in result]
+        self._erc20_svc = ERC20TokenService(mc)
 
 
 class UniswapEvents(Events):
@@ -76,29 +69,31 @@ class UniswapV2Events(UniswapEvents):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
-            token0_decimals, token1_decimals = self._get_token_decimals([token0_addr, token1_addr])
+            token0, token1 = self._erc20_svc.batch_get_erc20([token0_addr, token1_addr])
+            if token0 is None or token1 is None:
+                return None
             params = payload["params"]
             amount0_diff = int(params["amount0Out"]) - int(params["amount0In"])
             amount1_diff = int(params["amount1Out"]) - int(params["amount1In"])
             if amount0_diff > 0:
                 # pay token0, get token1
-                pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+                pool, token0, token1 = self._tagger([payload["address"], token0, token1])
                 return SwapAction(
                     pool=pool,
                     pay_token=token0,
-                    pay_amount=abs(amount0_diff / 10**token0_decimals),
+                    pay_amount=abs(amount0_diff / 10 ** token0["decimals"]),
                     recv_token=token1,
-                    recv_amount=abs(amount1_diff / 10**token1_decimals),
+                    recv_amount=abs(amount1_diff / 10 ** token1["decimals"]),
                 )
             elif amount1_diff > 0:
                 # pay token1, get token0
-                pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+                pool, token0, token1 = self._tagger([payload["address"], token0, token1])
                 return SwapAction(
                     pool=pool,
                     pay_token=token1,
-                    pay_amount=abs(amount1_diff / 10**token1_decimals),
+                    pay_amount=abs(amount1_diff / 10 ** token1["decimals"]),
                     recv_token=token0,
-                    recv_amount=abs(amount0_diff / 10**token0_decimals),
+                    recv_amount=abs(amount0_diff / 10 ** token0["decimals"]),
                 )
             else:
                 return None
@@ -111,15 +106,17 @@ class UniswapV2Events(UniswapEvents):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
-            token0_decimals, token1_decimals = self._get_token_decimals([token0_addr, token1_addr])
+            token0, token1 = self._erc20_svc.batch_get_erc20([token0_addr, token1_addr])
+            if token0 is None or token1 is None:
+                return None
             params = payload["params"]
-            pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+            pool, token0, token1 = self._tagger([payload["address"], token0, token1])
             return AddLiquidityAction(
                 pool=pool,
                 token_0=token0,
                 token_1=token1,
-                amount_0=int(params["amount0"]) / 10**token0_decimals,
-                amount_1=int(params["amount1"]) / 10**token1_decimals,
+                amount_0=int(params["amount0"]) / 10 ** token0["decimals"],
+                amount_1=int(params["amount1"]) / 10 ** token1["decimals"],
             )
 
         return text_sig, decoder
@@ -130,15 +127,17 @@ class UniswapV2Events(UniswapEvents):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token0_addr, token1_addr = self._get_token_pair(payload["address"])
-            token0_decimals, token1_decimals = self._get_token_decimals([token0_addr, token1_addr])
             params = payload["params"]
-            pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+            token0, token1 = self._erc20_svc.batch_get_erc20([token0_addr, token1_addr])
+            if token0 is None or token1 is None:
+                return None
+            pool, token0, token1 = self._tagger([payload["address"], token0, token1])
             return RemoveLiquidityAction(
                 pool=pool,
                 token_0=token0,
                 token_1=token1,
-                amount_0=int(params["amount0"]) / 10**token0_decimals,
-                amount_1=int(params["amount1"]) / 10**token1_decimals,
+                amount_0=int(params["amount0"]) / 10 ** token0["decimals"],
+                amount_1=int(params["amount1"]) / 10 ** token1["decimals"],
             )
 
         return text_sig, decoder
@@ -149,7 +148,10 @@ class UniswapV2Events(UniswapEvents):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
-            token0, token1 = self._tagger([params["token0"], params["token1"]])
+            token0, token1 = self._erc20_svc.batch_get_erc20([params["token0"], params["token1"]])
+            if token0 is None or token1 is None:
+                return None
+            token0, token1 = self._tagger([token0, token1])
             return PoolCreatedAction(
                 token_0=token0,
                 token_1=token1,
@@ -191,7 +193,10 @@ class UniswapV3Events(UniswapEvents):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
-            token0, token1 = self._tagger([params["token0"], params["token1"]])
+            token0, token1 = self._erc20_svc.batch_get_erc20([params["token0"], params["token1"]])
+            if token0 is None or token1 is None:
+                return None
+            token0, token1 = self._tagger([token0, token1])
             return PoolCreatedAction(
                 token_0=token0,
                 token_1=token1,
@@ -207,14 +212,16 @@ class UniswapV3Events(UniswapEvents):
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
             token0_addr, token1_addr = self._get_tokens_by_position(payload["address"], int(params["tokenId"]))
-            token0_decimals, token1_decimals = self._get_token_decimals([token0_addr, token1_addr])
-            pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+            token0, token1 = self._erc20_svc.batch_get_erc20([token0_addr, token1_addr])
+            if token0 is None or token1 is None:
+                return None
+            pool, token0, token1 = self._tagger([payload["address"], token0, token1])
             return AddLiquidityAction(
                 pool=pool,
                 token_0=token0,
                 token_1=token1,
-                amount_0=int(params["amount0"]) / 10**token0_decimals,
-                amount_1=int(params["amount1"]) / 10**token1_decimals,
+                amount_0=int(params["amount0"]) / 10 ** token0["decimals"],
+                amount_1=int(params["amount1"]) / 10 ** token1["decimals"],
             )
 
         return text_sig, decoder
@@ -226,14 +233,16 @@ class UniswapV3Events(UniswapEvents):
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
             token0_addr, token1_addr = self._get_tokens_by_position(payload["address"], int(params["tokenId"]))
-            token0_decimals, token1_decimals = self._get_token_decimals([token0_addr, token1_addr])
-            pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+            token0, token1 = self._erc20_svc.batch_get_erc20([token0_addr, token1_addr])
+            if token0 is None or token1 is None:
+                return None
+            pool, token0, token1 = self._tagger([payload["address"], token0, token1])
             return RemoveLiquidityAction(
                 pool=pool,
                 token_0=token0,
                 token_1=token1,
-                amount_0=abs(int(params["amount0"]) / 10**token0_decimals),
-                amount_1=abs(int(params["amount1"]) / 10**token1_decimals),
+                amount_0=abs(int(params["amount0"]) / 10 ** token0["decimals"]),
+                amount_1=abs(int(params["amount1"]) / 10 ** token1["decimals"]),
             )
 
         return text_sig, decoder
@@ -244,31 +253,31 @@ class UniswapV3Events(UniswapEvents):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
-            token0_addr, token1_addr = self._get_token_pair(
-                payload["address"],
-            )
-            token0_decimals, token1_decimals = self._get_token_decimals([token0_addr, token1_addr])
+            token0_addr, token1_addr = self._get_token_pair(payload["address"])
+            token0, token1 = self._erc20_svc.batch_get_erc20([token0_addr, token1_addr])
+            if token0 is None or token1 is None:
+                return None
             amount0, amount1 = int(params["amount0"]), int(params["amount1"])
 
             if amount0 > 0 and amount1 < 0:
                 # pay token0, get token1
-                pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+                pool, token0, token1 = self._tagger([payload["address"], token0, token1])
                 return SwapAction(
                     pool=pool,
                     pay_token=token0,
-                    pay_amount=abs(amount0 / 10**token0_decimals),
+                    pay_amount=abs(amount0 / 10 ** token0["decimals"]),
                     recv_token=token1,
-                    recv_amount=abs(amount1 / 10**token1_decimals),
+                    recv_amount=abs(amount1 / 10 ** token1["decimals"]),
                 )
             elif amount1 > 0 and amount0 < 0:
                 # pay token1, get token0
-                pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+                pool, token0, token1 = self._tagger([payload["address"], token0, token1])
                 return SwapAction(
                     pool=pool,
                     pay_token=token1,
-                    pay_amount=abs(amount1 / 10**token1_decimals),
+                    pay_amount=abs(amount1 / 10 ** token1["decimals"]),
                     recv_token=token0,
-                    recv_amount=abs(amount0 / 10**token0_decimals),
+                    recv_amount=abs(amount0 / 10 ** token0["decimals"]),
                 )
             else:
                 return None
@@ -284,15 +293,17 @@ class UniswapV3Events(UniswapEvents):
             token0_addr, token1_addr = self._get_token_pair(
                 payload["address"],
             )
-            token0_decimals, token1_decimals = self._get_token_decimals([token0_addr, token1_addr])
+            token0, token1 = self._erc20_svc.batch_get_erc20([token0_addr, token1_addr])
+            if token0 is None or token1 is None:
+                return None
             amount0, amount1 = int(params["amount0"]), int(params["amount1"])
-            pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+            pool, token0, token1 = self._tagger([payload["address"], token0, token1])
             return CollectAction(
                 pool=pool,
                 token_0=token0,
                 token_1=token1,
-                amount_0=abs(amount0 / 10**token0_decimals),
-                amount_1=abs(amount1 / 10**token1_decimals),
+                amount_0=abs(amount0 / 10 ** token0["decimals"]),
+                amount_1=abs(amount1 / 10 ** token1["decimals"]),
             )
 
         return text_sig, decoder
@@ -330,26 +341,28 @@ class BancorEV3Events(Events):
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
             token0_addr, token1_addr = params["sourceToken"], params["targetToken"]
-            token0_decimals, token1_decimals = self._get_token_decimals([token0_addr, token1_addr])
+            token0, token1 = self._erc20_svc.batch_get_erc20([token0_addr, token1_addr])
+            if token0 is None or token1 is None:
+                return None
             amount0, amount1 = int(params["sourceAmount"]), int(params["targetAmount"])
-            pool, token0, token1 = self._tagger([payload["address"], token0_addr, token1_addr])
+            pool, token0, token1 = self._tagger([payload["address"], token0, token1])
             if amount0 > 0 and amount1 < 0:
                 # pay token0, get token1
                 return SwapAction(
                     pool=pool,
                     pay_token=token0,
-                    pay_amount=abs(amount0 / 10**token0_decimals),
+                    pay_amount=abs(amount0 / 10 ** token0["decimals"]),
                     recv_token=token1,
-                    recv_amount=abs(amount1 / 10**token1_decimals),
+                    recv_amount=abs(amount1 / 10 ** token1["decimals"]),
                 )
             elif amount1 > 0 and amount0 < 0:
                 # pay token1, get token0
                 return SwapAction(
                     pool=pool,
                     pay_token=token1,
-                    pay_amount=abs(amount1 / 10**token1_decimals),
+                    pay_amount=abs(amount1 / 10 ** token1["decimals"]),
                     recv_token=token0,
-                    recv_amount=abs(amount0 / 10**token0_decimals),
+                    recv_amount=abs(amount0 / 10 ** token0["decimals"]),
                 )
             else:
                 return None
@@ -373,21 +386,17 @@ class CurveV2Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             params = payload["params"]
-            pool, token_sold, token_bought = self._tagger(
-                [
-                    params["pool"],
-                    params["token_sold"],
-                    params["token_bought"],
-                ]
-            )
-            sold_decimals, bought_decimals = self._get_token_decimals([params["token_sold"], params["token_bought"]])
+            token_sold, token_bought = self._erc20_svc.batch_get_erc20([params["token_sold"], params["token_bought"]])
+            if token_sold is None or token_bought is None:
+                return None
+            pool, token_sold, token_bought = self._tagger([params["pool"], token_sold, token_bought])
             amout_sold, amout_bought = int(params["amount_sold"]), int(params["amount_bought"])
             return SwapAction(
                 pool=pool,
                 pay_token=token_sold,
-                pay_amount=amout_sold / 10**sold_decimals,
+                pay_amount=amout_sold / 10 ** token_sold["decimals"],
                 recv_token=token_bought,
-                recv_amount=abs(amout_bought) / 10**bought_decimals,
+                recv_amount=abs(amout_bought) / 10 ** token_bought["decimals"],
             )
 
         return text_sig, decoder

@@ -1,0 +1,10 @@
+from .fs import DECODEX_DIR
+
+
+NULL_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+__all__ = [
+    "NULL_ADDRESS",
+    #
+    "DECODEX_DIR",
+]
