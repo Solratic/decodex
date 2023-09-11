@@ -12,19 +12,24 @@ from typing import Sequence
 from typing import Union
 
 from decodex.constant import DECODEX_DIR
+from decodex.type import ERC20Compatible
 from decodex.type import TaggedAddr
 
 
 class AddrTagger(ABC):
     @abstractmethod
-    def lazy_tag(self, address: Sequence[Optional[str]]) -> Generator[TaggedAddr, None, None]:
+    def lazy_tag(
+        self, address: Sequence[Optional[Union[str, Dict]]]
+    ) -> Generator[Union[TaggedAddr, ERC20Compatible], None, None]:
         """
         Tag addresses.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def __call__(self, address: Union[Sequence[Optional[str]], Optional[str]]) -> Sequence[Optional[TaggedAddr]]:
+    def __call__(
+        self, address: Union[Sequence[Optional[Union[str, Dict]]], Optional[str]]
+    ) -> Sequence[Optional[Union[TaggedAddr, ERC20Compatible]]]:
         """
         Tag one or more addresses.
         """
@@ -36,7 +41,9 @@ class SyncAddrTagger(AddrTagger):
     Tag addresses synchronously, one by one.
     """
 
-    def __call__(self, address: Union[Sequence[Optional[str]], Optional[str]]) -> Sequence[Optional[TaggedAddr]]:
+    def __call__(
+        self, address: Union[Sequence[Optional[Union[str, Dict]]], Optional[str]]
+    ) -> Sequence[Optional[Union[TaggedAddr, ERC20Compatible]]]:
         if address is None:
             return [None]
         if isinstance(address, str):
@@ -85,25 +92,39 @@ class JSONAddrTagger(SyncAddrTagger):
 
     def lazy_tag(
         self,
-        address: Sequence[Optional[str]],
-    ) -> Generator[Optional[TaggedAddr], None, None]:
+        address: Sequence[Optional[Union[str, Dict]]],
+    ) -> Generator[Optional[Union[TaggedAddr, ERC20Compatible]], None, None]:
         for addr in address:
             if addr is None:
                 yield None
                 continue
-            tag: Dict[str, Any] = self._addr_tags.get(addr.lower(), {})
-            yield {
-                "address": addr,
-                "name": tag.get("name", ""),
-                "labels": tag.get("labels", []),
-            }
+            if isinstance(addr, dict):
+                _relying_addr: Optional[str] = addr.get("address", None)
+                if _relying_addr is None or not isinstance(_relying_addr, str):
+                    yield None
+                    continue
+                tag: Dict[str, Any] = self._addr_tags.get(_relying_addr.lower(), {})
+                extra_fields = {
+                    "name": tag.get("name", ""),
+                    "labels": tag.get("labels", []),
+                }
+                yield {**addr, **extra_fields}
+            else:
+                tag: Dict[str, Any] = self._addr_tags.get(addr.lower(), {})
+                yield {
+                    "address": addr,
+                    "name": tag.get("name", ""),
+                    "labels": tag.get("labels", []),
+                }
 
 
 class BatchAddrTagger(AddrTagger):
     def __init__(self) -> None:
         super().__init__()
 
-    def __call__(self, address: Sequence[Optional[str]] | Optional[str]) -> Sequence[TaggedAddr]:
+    def __call__(
+        self, address: Sequence[Optional[str]] | Optional[str]
+    ) -> Sequence[Union[TaggedAddr, ERC20Compatible]]:
         raise NotImplementedError
 
 

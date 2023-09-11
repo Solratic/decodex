@@ -21,15 +21,22 @@ TaggedAddr = TypedDict(
     "TaggedAddr",
     {
         "address": str,  # address or ens name
-        "name": str,  # name of the contract (e.g., USD Coin (USDC))
+        "name": str,  # name of the address in our label dataset (e.g., USD Coin (USDC))
         "labels": List[str],  # label of the address (e.g., ["centre", "stablecoin"])
     },
 )
 
+
+class ERC20Compatible(TaggedAddr):
+    contract_name: Optional[str]  # name of the contract, different from 'name' (e.g., USD Coin)
+    decimals: Optional[int]  # decimals of the token (e.g., 6)
+    symbol: Optional[str]  # symbol of the token (e.g., USDC)
+
+
 AssetBalanceChanged = TypedDict(
     "BalanceChange",
     {
-        "asset": TaggedAddr,  # address of the asset
+        "asset": ERC20Compatible,  # address of the asset
         "balance_change": float,  # balance change of the asset
     },
 )

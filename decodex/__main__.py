@@ -10,9 +10,9 @@ from colorama import Style
 from jinja2 import Template
 from tabulate import tabulate
 
-from .constant import DECODEX_DIR
 from .installer import download_and_save_csv
 from .installer import download_and_save_json
+from decodex.constant import DECODEX_DIR
 from decodex.translate import Translator
 from decodex.utils import fmt_addr
 from decodex.utils import fmt_blktime

@@ -20,6 +20,7 @@ from .rpc_type import RawTraceCallResponse
 from .rpc_type import RawTraceCallResult
 from .tx_type import AccountBalanceChanged
 from .tx_type import AssetBalanceChanged
+from .tx_type import ERC20Compatible
 from .tx_type import EventPayload
 from .tx_type import Log
 from .tx_type import TaggedAddr
@@ -30,6 +31,7 @@ __all__ = [
     "Tx",
     "Log",
     "TaggedTx",
+    "ERC20Compatible",
     "TaggedAddr",
     "EventHandleFunc",
     "EventPayload",

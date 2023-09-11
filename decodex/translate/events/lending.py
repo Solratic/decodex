@@ -34,9 +34,11 @@ class AAVEV2Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return DepositAction(
                 pool=pool,
                 token=token,
@@ -51,9 +53,11 @@ class AAVEV2Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return BorrowAction(
                 pool=pool,
                 token=token,
@@ -68,9 +72,11 @@ class AAVEV2Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return WithdrawAction(
                 pool=pool,
                 token=token,
@@ -85,9 +91,11 @@ class AAVEV2Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return RepayAction(
                 pool=pool,
                 token=token,
@@ -102,9 +110,9 @@ class AAVEV2Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["asset"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return FlashloanAction(
                 pool=pool,
                 token=token,
@@ -130,9 +138,9 @@ class AAVEV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return SupplyAction(
                 pool=pool,
                 token=token,
@@ -147,9 +155,12 @@ class AAVEV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            # (token_decimals,) = self._get_token_decimals(token_addr)
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return BorrowAction(
                 pool=pool,
                 token=token,
@@ -167,9 +178,9 @@ class AAVEV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["asset"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return FlashloanAction(
                 pool=pool,
                 token=token,
@@ -184,9 +195,9 @@ class AAVEV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
+            pool, token = self._tagger([payload["address"], token])
             return RepayAction(
                 pool=pool,
                 token=token,
@@ -201,7 +212,10 @@ class AAVEV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
+            pool, token = self._tagger([payload["address"], token])
             return EnableCollateralAction(
                 pool=pool,
                 token=token,
@@ -215,7 +229,10 @@ class AAVEV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["reserve"]
-            pool, token = self._tagger([payload["address"], token_addr])
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
+            pool, token = self._tagger([payload["address"], token])
             return DisableCollateralAction(
                 pool=pool,
                 token=token,
@@ -240,12 +257,14 @@ class CompoundV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["params"]["asset"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
-            amount = payload["params"]["amount"] / 10**token_decimals
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
+            amount = payload["params"]["amount"] / 10 ** token["decimals"]
             dst = payload["params"]["dst"]
             return SupplyAction(
                 pool=dst,
-                token=token_addr,
+                token=token,
                 amount=amount,
             )
 
@@ -257,14 +276,16 @@ class CompoundV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["address"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
             params = payload["params"]
-            amount = params["__idx_2"] / 10**token_decimals
+            amount = params["__idx_2"] / 10 ** token["decimals"]
             src = params["__idx_0"]
             dst = params["__idx_1"]
             return WithdrawAction(
                 pool=src,
-                token=token_addr,
+                token=token,
                 amount=amount,
                 receiver=dst,
             )
@@ -277,13 +298,15 @@ class CompoundV3Events(Events):
 
         def decoder(payload: EventPayload) -> Optional[Action]:
             token_addr = payload["address"]
-            (token_decimals,) = self._get_token_decimals(token_addr)
+            token = self._erc20_svc.get_erc20(token_addr)
+            if token is None:
+                return None
             params = payload["params"]
-            amount = params["__idx_2"] / 10**token_decimals
+            amount = params["__idx_2"] / 10 ** token["decimals"]
             dst = params["__idx_1"]
             return SupplyAction(
                 pool=dst,
-                token=token_addr,
+                token=token,
                 amount=amount,
             )
 
