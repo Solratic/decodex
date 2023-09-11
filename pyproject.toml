@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "decodex"
-version = "0.5.2"
+version = "0.5.3"
 description = "Python package to decode dex actions"
 authors = ["alan890104 <alan890104@gmail.com>"]
 exclude = ["tests/**"]
