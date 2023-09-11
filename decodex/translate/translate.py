@@ -39,6 +39,7 @@ from decodex.translate.events import UniswapV3Events
 from decodex.type import AccountBalanceChanged
 from decodex.type import Action
 from decodex.type import AssetBalanceChanged
+from decodex.type import ContractCreation
 from decodex.type import EventHandleFunc
 from decodex.type import TaggedAddr
 from decodex.type import TaggedTx
@@ -382,6 +383,8 @@ class Translator:
             actions = others
         elif len(transfers) > 0:
             actions = transfers
+        elif tx.get("contract_created"):
+            actions = [ContractCreation(deployer=tx_from, contract=tx_contract_created)]
         elif len(tx["input"]) > 0 and tx["input"] != "0x":
             msg = parse_utf8(tx["input"])
             if msg:

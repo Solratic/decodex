@@ -6,6 +6,8 @@ from typing import Literal
 from typing import Optional
 from typing import TypedDict
 
+from .base import Action
+
 
 Log = TypedDict(
     "Log",
@@ -89,7 +91,7 @@ TaggedTx = TypedDict(
         "status": int,  # status of the transaction
         "reason": str,  # reason of the transaction if failed
         "method": str,  # calling method of the transaction
-        "actions": List[str],  # actions of the transaction
+        "actions": List[Action],  # actions of the transaction
         "balance_change": List[AccountBalanceChanged],  # balance change of the transaction
     },
     total=False,

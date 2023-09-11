@@ -1,11 +1,10 @@
-from .action_type import Action
 from .action_type import AddLiquidityAction
 from .action_type import BorrowAction
 from .action_type import CollectAction
+from .action_type import ContractCreation
 from .action_type import DepositAction
 from .action_type import DisableCollateralAction
 from .action_type import EnableCollateralAction
-from .action_type import EventHandleFunc
 from .action_type import FlashloanAction
 from .action_type import OwnerChangedAction
 from .action_type import PoolCreatedAction
@@ -16,6 +15,8 @@ from .action_type import SwapAction
 from .action_type import TransferAction
 from .action_type import UTF8Message
 from .action_type import WithdrawAction
+from .base import Action
+from .base import EventHandleFunc
 from .rpc_type import RawTraceCallResponse
 from .rpc_type import RawTraceCallResult
 from .tx_type import AccountBalanceChanged
@@ -36,6 +37,7 @@ __all__ = [
     "EventHandleFunc",
     "EventPayload",
     "Action",
+    "ContractCreation",
     "TransferAction",
     "UTF8Message",
     "SwapAction",

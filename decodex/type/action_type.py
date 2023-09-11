@@ -1,22 +1,26 @@
 from abc import abstractmethod
+from dataclasses import asdict
 from dataclasses import dataclass
 from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Optional
 
+from .base import Action
 from .tx_type import ERC20Compatible
 from .tx_type import TaggedAddr
 from decodex.utils import fmt_addr
 
 
-class Action:
-    @abstractmethod
-    def __repr__(self):
-        raise NotImplementedError
+@dataclass(frozen=True)
+class ContractCreation(Action):
+    deployer: TaggedAddr
+    contract: TaggedAddr
 
+    action: str = "contract_creation"
 
-EventHandleFunc = Callable[[Dict[str, Any]], Optional[Action]]
+    def __str__(self):
+        return f"{fmt_addr(self.deployer)} deployed {fmt_addr(self.contract)}"
 
 
 @dataclass(frozen=True)
@@ -31,7 +35,7 @@ class UTF8Message(Action):
 
     action: str = "utf8_message"
 
-    def __repr__(self):
+    def __str__(self):
         return f"{fmt_addr(self.sender)} sent message to {fmt_addr(self.receiver)}: {self.message}"
 
 
@@ -48,7 +52,7 @@ class TransferAction(Action):
 
     action: str = "transfer"
 
-    def __repr__(self):
+    def __str__(self):
         return f"{fmt_addr(self.sender)} transferred {self.amount} {fmt_addr(self.token)} to {fmt_addr(self.receiver)}"
 
 
@@ -66,7 +70,7 @@ class SwapAction(Action):
 
     action: str = "swap"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Swap {pay_amount} {pay_token} for {recv_amount} {recv_token} on {pool}"
         return tmpl.format(
             pool=fmt_addr(self.pool),
@@ -91,7 +95,7 @@ class AddLiquidityAction(Action):
 
     action: str = "add_liquidity"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Add {amount_0} {token_0} and {amount_1} {token_1} liquidity to {pool}"
         return tmpl.format(
             amount_1=fmt_addr(self.amount_1),
@@ -116,7 +120,7 @@ class RemoveLiquidityAction(Action):
 
     action: str = "remove_liquidity"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Remove {amount_0} {token_0} and {amount_1} {token_1} liquidity from {pool}"
         return tmpl.format(
             token_0=fmt_addr(self.token_0),
@@ -139,7 +143,7 @@ class PoolCreatedAction(Action):
 
     action: str = "pool_created"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Create {token_0} / {token_1} pool"
         if not self.fee:
             return tmpl.format(
@@ -168,7 +172,7 @@ class CollectAction(Action):
 
     action: str = "collect"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Collect {amount_0} {token_0} and {amount_1} {token_1} from {pool}"
         return tmpl.format(
             token_0=fmt_addr(self.token_0),
@@ -191,7 +195,7 @@ class OwnerChangedAction(Action):
 
     action: str = "owner_changed"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Change owner of {pool} from {old_owner} to {new_owner}"
         return tmpl.format(
             pool=fmt_addr(self.pool),
@@ -212,7 +216,7 @@ class BorrowAction(Action):
 
     action: str = "borrow"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Borrow {amount} {token} from {pool}"
         return tmpl.format(
             amount=self.amount,
@@ -233,7 +237,7 @@ class RepayAction(Action):
 
     action: str = "repay"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Repay {amount} {token} to {pool}"
         return tmpl.format(
             amount=self.amount,
@@ -254,7 +258,7 @@ class DepositAction(Action):
 
     action: str = "deposit"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Deposit {amount} {token} to {pool}"
         return tmpl.format(
             amount=self.amount,
@@ -276,7 +280,7 @@ class WithdrawAction(Action):
 
     action: str = "withdraw"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if not self.receiver:
             tmpl = "Withdraw {amount} {token} from {pool}"
             return tmpl.format(
@@ -305,7 +309,7 @@ class FlashloanAction(Action):
 
     action: str = "flashloan"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Flashloan {amount} {token} from {pool}"
         return tmpl.format(
             amount=self.amount,
@@ -325,7 +329,7 @@ class EnableCollateralAction(Action):
 
     action: str = "enable_collateral"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Enable {token} as collateral in {pool}"
         return tmpl.format(
             token=fmt_addr(self.token),
@@ -344,7 +348,7 @@ class DisableCollateralAction(Action):
 
     action: str = "disable_collateral"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Disable {token} as collateral in {pool}"
         return tmpl.format(
             token=fmt_addr(self.token),
@@ -364,7 +368,7 @@ class SupplyAction(Action):
 
     action: str = "supply"
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         tmpl = "Supply {amount} {token} to {pool}"
         return tmpl.format(
             token=fmt_addr(self.token),
