@@ -67,7 +67,7 @@ def download(chain: str):
 @click.option("--from-addr", type=str, help="Address of the sender", default=None)
 @click.option("--to-addr", type=str, help="Address of the receiver", default=None)
 @click.option("--value", type=float, help="Value in ether", default=None)
-@click.option("--input-data", type=str, help="Input data of the transaction", default="latest")
+@click.option("--input-data", type=str, help="Input data of the transaction", default="0x")
 @click.option("--block", type=str, help="Block number of the transaction", default="latest")
 @click.option("--chain", "-c", type=click.Choice(["ethereum"]), default="ethereum", help="Chain to use for decoding")
 @click.option("--provider-uri", "-p", type=str, default=os.getenv("WEB3_PROVIDER_URI", "http://localhost:8545"))

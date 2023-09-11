@@ -156,7 +156,7 @@ class Web3Searcher(BaseSearcher):
         """
         logs: List[Log] = []
         balance_changes = defaultdict(int)
-        for call in result["calls"]:
+        for call in result.get("calls", []):
             if "logs" in call:
                 logs += call["logs"]
             if "value" in call:
