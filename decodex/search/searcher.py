@@ -128,7 +128,7 @@ class Web3Searcher(BaseSearcher):
         eth_balance_changes = {from_addr: {"ETH": -value, "Gas Fee": -gas_used * gas_price}}
 
         # If to_address is an eoa, add the value to the balance change
-        if self.web3.eth.get_code(to_addr).hex() == "0x":
+        if to_addr and self.web3.eth.get_code(to_addr).hex() == "0x":
             eth_balance_changes[to_addr] = {}
             eth_balance_changes[to_addr]["ETH"] = value
 

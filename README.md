@@ -74,6 +74,12 @@ The output would be
 decodex explain --txhash 0x8605571efe3144b47b6157a3d50c20d8fef99b901c466dc65b8f32e6430769ee
 ```
 
+### Example 5 : Contract Creation
+
+```bash
+decodex explain --txhash 0xc0fcba2048a90f7430b3c78ce99110b7e24e6abf782df362e91bf8cb4643d215
+```
+
 ### Example 5 : Explain a transaction by simulate on certain block
 
 ```bash
