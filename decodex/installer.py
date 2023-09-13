@@ -31,6 +31,20 @@ def download_and_save_csv(chain: str, save_path: Path):
     spec.raise_for_status()
     spec = json.loads(spec.text)
     download_url = spec["download_url"]
+    sha: str = spec["sha"]
+
+    # Check if file already exists
+    if save_path.with_suffix(".checksum").exists():
+        with open(save_path.with_suffix(".checksum"), "r") as cf:
+            checksum = cf.read()
+            if checksum == sha:
+                print(f"\n{save_path.name} already exists and is up to date")
+                return
+            else:
+                print(f"\n{save_path.name} exists but is out of date")
+
+    print(f"Downloading {remote_path}")
+    save_path.with_suffix(".checksum").write_text(sha)
 
     # Tempfile to store gzipped data
     with tempfile.TemporaryDirectory() as temp_dir:
