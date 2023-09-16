@@ -71,6 +71,7 @@ class Translator:
         defis: Union[Iterable[str], Literal["all"]] = "all",
         verbose: bool = False,
         logger: Logger = None,
+        skip_install: bool = False,
         *args,
         **kwargs,
     ) -> None:
@@ -91,12 +92,14 @@ class Translator:
         logger : Logger, optional
             Logger to log error messages, default is None
         """
+
         self.tagger = TaggerFactory.create(tagger) if isinstance(tagger, str) else tagger
 
         self.sig_lookup = (
             SignatureFactory.create(fmt=sig_lookup, chain=chain) if isinstance(sig_lookup, str) else sig_lookup
         )
 
+        self.chain = chain
         self.searcher = SearcherFactory.create("web3", uri=provider_uri)
         self.mc = Multicall(provider_uri, logger=logger)
         self.hdlrs: Dict[str, EventHandleFunc] = {}
@@ -106,6 +109,35 @@ class Translator:
         self.verbose = verbose
         if logger is None and verbose:
             self.logger = Logger(name=self.__class__.__name__)
+
+        if not skip_install:
+            self.install()
+
+    def install(self):
+        from decodex import installer
+        from decodex import constant
+
+        installer.download_github_file(
+            save_path=str(constant.DECODEX_DIR.joinpath(self.chain, "tags.json")),
+            org="brianleect",
+            repo="etherscan-labels",
+            branch="main",
+            path="data/etherscan/combined/combinedAllLabels.json",
+            is_lfs=False,
+            verify_ssl=False,
+            use_tempfile=False,
+        )
+
+        installer.download_github_file(
+            save_path=str(constant.DECODEX_DIR.joinpath(self.chain, "signatures.csv")),
+            org="Solratic",
+            repo="function-signature-registry",
+            branch="main",
+            path="data/ethereum/func_sign.csv.gz",
+            is_lfs=True,
+            verify_ssl=False,
+            use_tempfile=True,
+        )
 
     def translate(self, txhash: str, *, max_workers: int = 10) -> TaggedTx:
         tx: Tx = self.searcher.get_tx(txhash)
