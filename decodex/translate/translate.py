@@ -25,6 +25,7 @@ from decodex.convert.address import AddrTagger
 from decodex.convert.address import TaggerFactory
 from decodex.convert.signature import SignatureFactory
 from decodex.convert.signature import SignatureLookUp
+from decodex.convert.token import ERC20TokenService
 from decodex.decode import eth_decode_input
 from decodex.decode import eth_decode_log
 from decodex.search import SearcherFactory
@@ -105,6 +106,7 @@ class Translator:
         self.hdlrs: Dict[str, EventHandleFunc] = {}
         self.web3 = Web3(Web3.HTTPProvider(provider_uri))
         self.__register__(self.evt_opts.keys() if defis == "all" else defis)
+        self._erc_svc = ERC20TokenService(self.mc)
 
         self.verbose = verbose
         if logger is None and verbose:
@@ -316,7 +318,7 @@ class Translator:
     def _process_transfer(
         self,
         actions: List[TransferAction],
-        eth_balance_changes: Dict[str, Dict[Literal["ETH", "Gas Fee"], int]],
+        eth_balance_changes: Dict[str, Dict[str, int]],
     ) -> List[AccountBalanceChanged]:
         tagged_mapping: Dict[str, TaggedAddr] = {}
         addr_token_pairs = set()
@@ -361,16 +363,20 @@ class Translator:
             if balance_changed.get(account) is None:
                 balance_changed[account] = {}
 
-            if changes.get("ETH", 0):
-                balance_changed[account]["ETH"] = {
-                    "asset": {"address": NULL_ADDRESS_0x0, "name": "Platform (Ether)", "labels": []},
-                    "balance_change": changes["ETH"] / 10**18,
+            if changes.get(NULL_ADDRESS_0x0, None):
+                platform_token = self._erc_svc.get_erc20(NULL_ADDRESS_0x0)
+                (asset,) = self.tagger([platform_token])
+                balance_changed[account][NULL_ADDRESS_0x0] = {
+                    "asset": asset,
+                    "balance_change": changes[NULL_ADDRESS_0x0] / 10 ** asset["decimals"],
                 }
 
-            if changes.get("Gas Fee", 0):
-                balance_changed[account]["Gas Fee"] = {
-                    "asset": {"address": NULL_ADDRESS_0xF, "name": "Platform (Gas Fee)", "labels": []},
-                    "balance_change": changes["Gas Fee"] / 10**18,
+            if changes.get(NULL_ADDRESS_0xF, None):
+                platform_token = self._erc_svc.get_erc20(NULL_ADDRESS_0xF)
+                (asset,) = self.tagger([platform_token])
+                balance_changed[account][NULL_ADDRESS_0xF] = {
+                    "asset": asset,
+                    "balance_change": changes[NULL_ADDRESS_0xF] / 10 ** asset["decimals"],
                 }
 
         account_balance_changed_list: List[AccountBalanceChanged] = [
@@ -425,8 +431,6 @@ class Translator:
             msg = parse_utf8(tx["input"])
             if msg:
                 actions = [UTF8Message(tx_from, tx_to, msg)]
-        else:
-            actions = []
 
         return {
             "txhash": tx["txhash"],

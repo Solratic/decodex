@@ -59,7 +59,7 @@ Tx = TypedDict(
         "txhash": str,  # transaction hash, hex string. 0x prefixed.
         "from": str,  # from address, hex string. 0x prefixed.
         "to": Optional[str],  # to address, hex string. 0x prefixed.
-        "contract_created": Optional[TaggedAddr],  # contract created by the transaction, hex string. 0x prefixed.
+        "contract_created": Optional[str],  # contract created by the transaction, hex string. 0x prefixed.
         "block_number": int,  # block number of the transaction
         "block_timestamp": int,  # timestamp of the block, in seconds.
         "value": int,  # value of the transaction, in wei.
@@ -69,7 +69,7 @@ Tx = TypedDict(
         "status": int,  # status of the transaction
         "reason": str,  # reason of the transaction if failed
         "logs": List[Log],  # logs of the transaction
-        "eth_balance_changes": Dict[str, Dict[Literal["ETH", "Gas Fee"], int]],  # ETH balance change of the transaction
+        "eth_balance_changes": Dict[str, Dict[str, int]],  # ETH balance change of the transaction
     },
     total=False,
 )

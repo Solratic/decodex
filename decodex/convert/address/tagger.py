@@ -104,11 +104,9 @@ class JSONAddrTagger(SyncAddrTagger):
                     yield None
                     continue
                 tag: Dict[str, Any] = self._addr_tags.get(_relying_addr.lower(), {})
-                extra_fields = {
-                    "name": tag.get("name", ""),
-                    "labels": tag.get("labels", []),
-                }
-                yield {**addr, **extra_fields}
+                addr["name"] = addr["name"] or tag.get("name", "")
+                addr["labels"] = tag.get("labels", [])
+                yield addr
             else:
                 tag: Dict[str, Any] = self._addr_tags.get(addr.lower(), {})
                 yield {

@@ -9,12 +9,8 @@ from typing import Union
 import diskcache
 from cachetools import cached
 from cachetools import LRUCache
-from eth_utils.address import to_checksum_address
 from multicall import Call
 from multicall import Multicall
-from web3 import Web3
-from web3.exceptions import BadFunctionCallOutput
-from web3.exceptions import ContractLogicError
 
 from decodex.constant import DECODEX_DIR
 from decodex.constant import NULL_ADDRESS_0x0
@@ -23,9 +19,22 @@ from decodex.type import ERC20Compatible
 
 
 class ERC20TokenService:
+    _instance = None
+    _initialize = False
+    _singleton_lock = Lock()
+
+    # Singleton pattern
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(ERC20TokenService, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self, mc: Multicall, *, cache_path: Optional[str] = None) -> None:
-        self._mc = mc
-        self._cache = diskcache.Cache(cache_path or DECODEX_DIR.joinpath("erc20"))
+        with self._singleton_lock:
+            if not self._initialize:
+                self._mc = mc
+                self._cache = diskcache.Cache(cache_path or DECODEX_DIR.joinpath("erc20"))
+                self._initialize = True
 
     @cached(cache=LRUCache(maxsize=131072), lock=Lock())
     def get_erc20(
@@ -52,8 +61,9 @@ class ERC20TokenService:
             return token
 
         if address in {NULL_ADDRESS_0x0, NULL_ADDRESS_0xF}:
+            suffix = "ETH Transfer" if address == NULL_ADDRESS_0x0 else "Gas Fee"
             return {
-                "name": "Platform Token",
+                "name": f"Platform Token ({suffix})",
                 "address": address,
                 "contract_name": None,
                 "symbol": "ETH",

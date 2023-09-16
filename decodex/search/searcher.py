@@ -15,8 +15,9 @@ import requests
 from web3 import Web3
 from web3.types import Wei
 
+from decodex.constant import NULL_ADDRESS_0x0
+from decodex.constant import NULL_ADDRESS_0xF
 from decodex.exceptions import RPCException
-from decodex.type import AccountBalanceChanged
 from decodex.type import Log
 from decodex.type import RawTraceCallResponse
 from decodex.type import RawTraceCallResult
@@ -102,7 +103,6 @@ class Web3Searcher(BaseSearcher):
             }
             for log in tx_receipt["logs"]
         ]
-
         status = tx_receipt["status"]
         reason = ""
         if status == 0 and show_revert_reason:
@@ -125,13 +125,18 @@ class Web3Searcher(BaseSearcher):
         gas_price = tx["gasPrice"]
         value = tx["value"]
 
-        eth_balance_changes = {from_addr: {"ETH": -value, "Gas Fee": -gas_used * gas_price}}
+        eth_balance_changes = {
+            from_addr: {
+                NULL_ADDRESS_0x0: -value if status else 0,
+                NULL_ADDRESS_0xF: -gas_used * gas_price,
+            }
+        }
 
         # If to_address is an eoa, add the value to the balance change
         if to_addr and status == 1 and self.web3.eth.get_code(to_addr).hex() == "0x":
             if to_addr not in eth_balance_changes:
                 eth_balance_changes[to_addr] = {}
-            eth_balance_changes[to_addr]["ETH"] = value
+            eth_balance_changes[to_addr][NULL_ADDRESS_0x0] = value
 
         return {
             "txhash": tx_receipt["transactionHash"].hex(),
