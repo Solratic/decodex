@@ -134,7 +134,7 @@ class ChecksumPostCallback(BasePostCallback):
         hash_object = hashlib.new(hash_algorithm)
 
         with Path(src_path).open("rb") as f:
-            while chunk := f.read(4096):
+            for chunk in iter(lambda: f.read(4096), b""):
                 hash_object.update(chunk)
 
         checksum = hash_object.hexdigest()
