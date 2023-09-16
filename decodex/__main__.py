@@ -10,9 +10,8 @@ from colorama import Style
 from jinja2 import Template
 from tabulate import tabulate
 
-from .installer import download_and_save_csv
-from .installer import download_and_save_json
 from decodex.constant import DECODEX_DIR
+from decodex.installer import download_github_file
 from decodex.translate import Translator
 from decodex.utils import fmt_addr
 from decodex.utils import fmt_blktime
@@ -44,22 +43,47 @@ def cli():
 
 @cli.command(help="download tags and signatures for a chain")
 @click.argument("chain", default="ethereum", type=click.Choice(["ethereum"]))
-def download(chain: str):
+@click.option("--verify-ssl", is_flag=True, help="Verify SSL", default=True)
+def download(chain: str, verify_ssl: bool):
     chain = chain.lower()
-    dir = DECODEX_DIR.joinpath(chain)
-    dir.mkdir(parents=True, exist_ok=True)
+    parents = DECODEX_DIR.joinpath(chain)
 
     if chain == "ethereum":
-        download_and_save_json(
-            "https://raw.githubusercontent.com/brianleect/etherscan-labels/main/data/etherscan/combined/combinedAllLabels.json",
-            dir.joinpath("tags.json"),
+        download_github_file(
+            save_path=str(parents.joinpath("tags.json")),
+            org="brianleect",
+            repo="etherscan-labels",
+            branch="main",
+            path="data/etherscan/combined/combinedAllLabels.json",
+            is_lfs=False,
+            verify_ssl=verify_ssl,
+            use_tempfile=False,
         )
-        download_and_save_csv(
-            chain="ethereum",
-            save_path=dir.joinpath("signatures.csv"),
+        download_github_file(
+            save_path=str(parents.joinpath("signatures.csv")),
+            org="Solratic",
+            repo="function-signature-registry",
+            branch="main",
+            path="data/ethereum/func_sign.csv.gz",
+            is_lfs=True,
+            verify_ssl=verify_ssl,
+            use_tempfile=True,
         )
     else:
         raise ValueError(f"Chain {chain} is not yet supported.")
+
+
+@cli.command(help="Remove downloaded tags and signatures for a chain")
+@click.argument("chain", default="ethereum", type=click.Choice(["ethereum"]))
+def clean(chain: str):
+    chain = chain.lower()
+    dir = DECODEX_DIR.joinpath(chain)
+    if dir.exists():
+        for f in dir.iterdir():
+            f.unlink()
+        dir.rmdir()
+    else:
+        print(f"{chain} not found")
 
 
 @cli.command(help="Explain the transaction by the given hash")

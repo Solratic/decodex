@@ -20,7 +20,7 @@ class ContractCreation(Action):
     action: str = "contract_creation"
 
     def __str__(self):
-        return f"{fmt_addr(self.deployer)} deployed {fmt_addr(self.contract)}"
+        return f"{fmt_addr(self.deployer)} deployed contract {fmt_addr(self.contract)}"
 
 
 @dataclass(frozen=True)
