@@ -43,7 +43,7 @@ def cli():
 
 @cli.command(help="download tags and signatures for a chain")
 @click.argument("chain", default="ethereum", type=click.Choice(["ethereum"]))
-@click.option("--verify-ssl", is_flag=True, help="Verify SSL", default=True)
+@click.option("--verify-ssl", is_flag=True, help="Verify SSL", default=False)
 def download(chain: str, verify_ssl: bool):
     chain = chain.lower()
     parents = DECODEX_DIR.joinpath(chain)
