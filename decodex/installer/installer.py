@@ -1,6 +1,8 @@
+import os
 import pathlib
 import tempfile
 import warnings
+from typing import Dict
 
 import requests
 from tqdm import tqdm
@@ -28,15 +30,22 @@ def _get_github_url(save_path: str, org: str, repo: str, branch: str, path: str,
     )
 
 
-def _download_from_url(url: str, save_path: str, verify_ssl: bool) -> None:
-    response = requests.get(url=url, verify=verify_ssl, stream=True)
-    file_size = int(response.headers.get("content-length", 0))
-    with tqdm(total=file_size, unit="iB", unit_scale=True) as pbar:
-        with open(save_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
-                    pbar.update(len(chunk))
+def download_from_url(url: str, save_path: str, verify_ssl: bool, retry_with_proxy: bool = True) -> None:
+    try:
+        response = requests.get(url=url, verify=verify_ssl, stream=True)
+        file_size = int(response.headers.get("content-length", 0))
+        with tqdm(total=file_size, unit="iB", unit_scale=True) as pbar:
+            with open(save_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk:
+                        f.write(chunk)
+                        pbar.update(len(chunk))
+    except Exception as e:
+        if not retry_with_proxy:
+            raise e
+        proxy = os.getenv("PROXY_URL", None)
+        if proxy:
+            download_from_url(url, save_path, verify_ssl, retry_with_proxy=False)
 
 
 def download_github_file(
@@ -63,7 +72,7 @@ def download_github_file(
 
     try:
         src_path = tempfile.mktemp() if use_tempfile else save_path
-        _download_from_url(url, src_path, verify_ssl)
+        download_from_url(url, src_path, verify_ssl)
     except Exception as e:
         print(f"Error downloading file: {e}")
         return

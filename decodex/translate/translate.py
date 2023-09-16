@@ -117,27 +117,31 @@ class Translator:
         from decodex import installer
         from decodex import constant
 
-        installer.download_github_file(
-            save_path=str(constant.DECODEX_DIR.joinpath(self.chain, "tags.json")),
-            org="brianleect",
-            repo="etherscan-labels",
-            branch="main",
-            path="data/etherscan/combined/combinedAllLabels.json",
-            is_lfs=False,
-            verify_ssl=False,
-            use_tempfile=False,
-        )
+        tags_path = constant.DECODEX_DIR.joinpath(self.chain, "tags.json")
+        if not tags_path.exists():
+            installer.download_github_file(
+                save_path=str(tags_path),
+                org="brianleect",
+                repo="etherscan-labels",
+                branch="main",
+                path="data/etherscan/combined/combinedAllLabels.json",
+                is_lfs=False,
+                verify_ssl=False,
+                use_tempfile=False,
+            )
 
-        installer.download_github_file(
-            save_path=str(constant.DECODEX_DIR.joinpath(self.chain, "signatures.csv")),
-            org="Solratic",
-            repo="function-signature-registry",
-            branch="main",
-            path="data/ethereum/func_sign.csv.gz",
-            is_lfs=True,
-            verify_ssl=False,
-            use_tempfile=True,
-        )
+        signature_path = constant.DECODEX_DIR.joinpath(self.chain, "signatures.csv")
+        if not signature_path.exists():
+            installer.download_github_file(
+                save_path=str(signature_path),
+                org="Solratic",
+                repo="function-signature-registry",
+                branch="main",
+                path="data/ethereum/func_sign.csv.gz",
+                is_lfs=True,
+                verify_ssl=False,
+                use_tempfile=True,
+            )
 
     def translate(self, txhash: str, *, max_workers: int = 10) -> TaggedTx:
         tx: Tx = self.searcher.get_tx(txhash)
