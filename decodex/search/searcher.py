@@ -237,15 +237,19 @@ class Web3Searcher(BaseSearcher):
             raise RPCException(resp["error"]["code"], resp["error"]["message"])
 
         logs, account_balance = self._parse_calls(resp["result"])
+
+        eth_balance_changes = {}
         if len(account_balance) == 0:
-            eth_balance_changes = {from_address: {"ETH": -value, "Gas Fee": 0}}
+            eth_balance_changes[from_address] = {NULL_ADDRESS_0x0: -value, NULL_ADDRESS_0xF: 0}
         else:
-            eth_balance_changes = {addr: {"ETH": wei, "Gas Fee": 0} for addr, wei in account_balance.items()}
+            eth_balance_changes = {
+                addr: {NULL_ADDRESS_0x0: wei, NULL_ADDRESS_0xF: 0} for addr, wei in account_balance.items()
+            }
 
         if to_address and self.web3.eth.get_code(to_address).hex() == "0x":
             if to_address not in eth_balance_changes:
                 eth_balance_changes[to_address] = {}
-            eth_balance_changes[to_address]["ETH"] = value
+            eth_balance_changes[to_address][NULL_ADDRESS_0x0] = value
 
         result = resp.get("result", {})
         tx: Tx = {
