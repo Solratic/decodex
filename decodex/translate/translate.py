@@ -93,6 +93,8 @@ class Translator:
         logger : Logger, optional
             Logger to log error messages, default is None
         """
+        if not skip_install:
+            self.install()
 
         self.tagger = TaggerFactory.create(tagger) if isinstance(tagger, str) else tagger
 
@@ -111,9 +113,6 @@ class Translator:
         self.verbose = verbose
         if logger is None and verbose:
             self.logger = Logger(name=self.__class__.__name__)
-
-        if not skip_install:
-            self.install()
 
     def install(self):
         from decodex import installer
