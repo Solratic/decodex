@@ -93,6 +93,8 @@ class Translator:
         logger : Logger, optional
             Logger to log error messages, default is None
         """
+        self.chain = chain
+
         if not skip_install:
             self.install()
 
@@ -102,7 +104,6 @@ class Translator:
             SignatureFactory.create(fmt=sig_lookup, chain=chain) if isinstance(sig_lookup, str) else sig_lookup
         )
 
-        self.chain = chain
         self.searcher = SearcherFactory.create("web3", uri=provider_uri)
         self.mc = Multicall(provider_uri, logger=logger)
         self.hdlrs: Dict[str, EventHandleFunc] = {}
