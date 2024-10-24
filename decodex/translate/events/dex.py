@@ -1,7 +1,5 @@
-from typing import List
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
 from multicall import Call
 from multicall import Multicall
