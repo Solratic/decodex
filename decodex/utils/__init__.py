@@ -20,5 +20,4 @@ __all__ = [
     "fmt_gas",
     "fmt_value",
     "fmt_status",
-    "fmt_actions",
 ]

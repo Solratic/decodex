@@ -6,7 +6,6 @@ NULL_ADDRESS_0xF = "0xffffffffffffffffffffffffffffffffffffffff"
 
 __all__ = [
     "NULL_ADDRESS_0x0",
-    "NULL_ADDRESS_0xF"
-    #
+    "NULL_ADDRESS_0xF",
     "DECODEX_DIR",
 ]

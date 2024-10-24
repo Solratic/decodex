@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Dict
-from typing import Optional
 
 from .utils import trunc_addr
 
@@ -12,7 +11,7 @@ def fmt_blktime(blktime: datetime) -> str:
 def fmt_addr(ta: Dict, truncate: bool = True) -> str:
     addr = ta["address"]
     name = ta["name"]
-    labels = ", ".join(l for l in ta["labels"] if l)
+    labels = ", ".join(lbl for lbl in ta["labels"] if lbl)
 
     if truncate:
         rtn = name if name else trunc_addr(addr)

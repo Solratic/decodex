@@ -1,6 +1,5 @@
 import json
 import traceback
-from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from logging import Logger

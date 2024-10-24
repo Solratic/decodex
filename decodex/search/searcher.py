@@ -10,6 +10,7 @@ from typing import List
 from typing import Literal
 from typing import Tuple
 from typing import Union
+from typing import Optional
 
 import requests
 from web3 import Web3
@@ -68,7 +69,7 @@ class BaseSearcher(ABC):
 
 
 class Web3Searcher(BaseSearcher):
-    def __init__(self, provider: str = None) -> None:
+    def __init__(self, provider: Optional[str] = None) -> None:
         """
         Initialize a Web3Searcher with a Web3 instance or a Web3 http provider URI.
 
